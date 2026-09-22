@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormAssist - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root{--white:#FFFFFF;--bg:#F4F7FB;--blue:#87CEEB;--blue2:#ADD8E6;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--shadow:0 4px 24px rgba(26,111,168,0.12);}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;}
+        .card{background:var(--white);border-radius:28px;padding:36px 24px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(26,35,64,0.10);}
+        .logo-wrap{text-align:center;margin-bottom:32px;}
+        .logo-ico{width:76px;height:76px;border-radius:22px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 14px;box-shadow:0 6px 20px rgba(26,111,168,0.3);}
+        .logo-name{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--navy);}
+        .logo-name span{color:var(--blue-dark);}
+        .logo-sub{font-size:13px;color:var(--sub);margin-top:5px;}
+        .field-group{margin-bottom:14px;}
+        .field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--sub);margin-bottom:7px;display:block;}
+        .field-wrap{position:relative;}
+        .field-input{width:100%;padding:14px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:14px;color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;}
+        .field-input:focus{border-color:var(--blue-dark);background:var(--white);box-shadow:0 0 0 3px rgba(26,111,168,0.1);}
+        .field-input::placeholder{color:#B8C5D6;}
+        .eye-btn{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;cursor:pointer;opacity:0.5;}
+        .error-box{background:#FEF2F2;border:1.5px solid #FECACA;border-radius:12px;padding:11px 14px;font-size:13px;color:var(--coral);margin-bottom:14px;display:none;align-items:center;gap:8px;}
+        .error-box.show{display:flex;}
+        .api-notice{background:#EFF8FF;border:1px solid var(--blue2);border-radius:10px;padding:9px 13px;font-size:11px;color:var(--blue-dark);margin-bottom:14px;text-align:center;}
+        .btn-main{width:100%;padding:15px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.3s;margin-top:4px;}
+        .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,111,168,0.35);}
+        .btn-main:disabled{opacity:0.7;cursor:not-allowed;transform:none;}
+        .divider{display:flex;align-items:center;gap:12px;margin:18px 0;}
+        .div-line{flex:1;height:1px;background:var(--border);}
+        .div-txt{font-size:12px;color:var(--sub);font-weight:500;}
+        .btn-google{width:100%;padding:14px;background:var(--white);border:1.5px solid var(--border);border-radius:14px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'DM Sans',sans-serif;}
+        .btn-google:hover{border-color:var(--blue2);box-shadow:var(--shadow);}
+        .bottom-row{text-align:center;margin-top:22px;font-size:14px;color:var(--sub);}
+        .link{color:var(--blue-dark);font-weight:700;cursor:pointer;}
+        .link:hover{text-decoration:underline;}
+        .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:12px;padding:12px 22px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;}
+        .toast.on{transform:translateX(-50%) translateY(0);}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo-wrap">
+            <div class="logo-ico">📋</div>
+            <div class="logo-name">Form<span>Assist</span></div>
+            <div class="logo-sub">AI-Powered Multilingual Form Assistant</div>
+        </div>
+
+        <!-- API Notice -->
+        <div class="api-notice" id="apiNotice">
+            🔗 Connecting to backend... <span id="apiStatus">checking</span>
+        </div>
+
+        <div class="error-box" id="errorBox">
+            <span>⚠️</span><span id="errorTxt">Invalid username or password!</span>
+        </div>
+
+        <div class="field-group">
+            <label class="field-label">Username</label>
+            <input class="field-input" id="username" type="text" placeholder="Enter your username" onkeydown="if(event.key==='Enter')login()">
+        </div>
+
+        <div class="field-group">
+            <label class="field-label">Password</label>
+            <div class="field-wrap">
+                <input class="field-input" id="password" type="password" placeholder="Enter your password" onkeydown="if(event.key==='Enter')login()" style="padding-right:44px">
+                <span class="eye-btn" onclick="togglePass()">👁️</span>
+            </div>
+        </div>
+
+        <button class="btn-main" id="loginBtn" onclick="login()">
+            <span id="loginTxt">Login →</span>
+            <div class="btn-loader" id="loginLoader"></div>
+        </button>
+
+        <div class="divider">
+            <div class="div-line"></div>
+            <div class="div-txt">or continue with</div>
+            <div class="div-line"></div>
+        </div>
+
+        <button class="btn-google" onclick="googleLogin()">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Sign in with Google
+        </button>
+
+        <div class="bottom-row">
+            Don't have an account? <span class="link" onclick="window.location.href='signup_fixed.html'">Sign Up</span>
+        </div>
+    </div>
+
+    <div class="toast" id="toastEl"></div>
+
+    <script>
+        // =============================================
+        // API CONFIG — Replit pe apna URL daalo
+        // =============================================
+        var API_BASE = 'http://localhost:8000'; // Replit URL: https://your-repl.replit.app
+
+        // Check backend connection on load
+        window.addEventListener('load', function(){
+            checkBackend();
+        });
+
+        async function checkBackend(){
+            var notice = document.getElementById('apiNotice');
+            var status = document.getElementById('apiStatus');
+            try {
+                var res = await fetch(API_BASE + '/health', {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(3000)
+                });
+                if(res.ok){
+                    status.textContent = '✅ Connected';
+                    notice.style.background = '#ECFDF5';
+                    notice.style.borderColor = '#A7F3D0';
+                    notice.style.color = '#10B981';
+                    setTimeout(function(){ notice.style.display='none'; }, 2000);
+                } else {
+                    status.textContent = '⚠️ Backend offline — Demo mode';
+                }
+            } catch(e){
+                status.textContent = '⚠️ Backend offline — Demo mode';
+            }
+        }
+
+        function togglePass(){
+            var inp = document.getElementById('password');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+
+        function setLoading(loading){
+            var btn = document.getElementById('loginBtn');
+            var txt = document.getElementById('loginTxt');
+            var loader = document.getElementById('loginLoader');
+            btn.disabled = loading;
+            txt.style.display = loading ? 'none' : 'inline';
+            loader.style.display = loading ? 'block' : 'none';
+        }
+
+        async function login(){
+            var u = document.getElementById('username').value.trim();
+            var p = document.getElementById('password').value.trim();
+            var eb = document.getElementById('errorBox');
+
+            if(!u || !p){
+                document.getElementById('errorTxt').textContent = 'Please enter both username and password!';
+                eb.classList.add('show');
+                return;
+            }
+
+            eb.classList.remove('show');
+            setLoading(true);
+
+            // Check if backend is online first
+            var backendOnline = false;
+            try {
+                var healthRes = await fetch(API_BASE + '/health', { signal: AbortSignal.timeout(3000) });
+                backendOnline = healthRes.ok;
+            } catch(e){ backendOnline = false; }
+
+            if(!backendOnline){
+                // Backend offline - show error, don't auto login
+                document.getElementById('errorTxt').textContent = '⚠️ Server offline! Please start backend first.';
+                eb.classList.add('show');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                var res = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p }),
+                    signal: AbortSignal.timeout(5000)
+                });
+
+                var data = await res.json();
+
+                if(res.ok && data.success){
+                    localStorage.setItem('fa_token', data.token);
+                    localStorage.setItem('fa_username', data.username);
+                    localStorage.removeItem('fa_demo_mode');
+                    t('✅ Login successful!');
+                    setTimeout(function(){ window.location.href = 'home.html'; }, 800);
+                } else {
+                    document.getElementById('errorTxt').textContent = data.detail || 'Invalid username or password!';
+                    eb.classList.add('show');
+                }
+            } catch(e){
+                document.getElementById('errorTxt').textContent = 'Connection error! Check backend.';
+                eb.classList.add('show');
+            }
+
+            setLoading(false);
+        }
+
+        function googleLogin(){
+            t('🔄 Signing in with Google...');
+            localStorage.setItem('fa_token', 'google_demo_token');
+            localStorage.setItem('fa_username', 'Google User');
+            setTimeout(function(){ window.location.href = 'home.html'; }, 1200);
+        }
+
+        var tt;
+        function toast(msg){return t(msg);}
+        function t(msg){
+            var el = document.getElementById('toastEl');
+            el.textContent = msg;
+            el.classList.add('on');
+            clearTimeout(tt);
+            tt = setTimeout(function(){ el.classList.remove('on'); }, 2500);
+        }
+    </script>
+</body>
+</html>
