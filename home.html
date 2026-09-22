@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormAssist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--white:#FFFFFF;--bg:#F4F7FB;--blue:#87CEEB;--blue2:#ADD8E6;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--amber:#F59E0B;--shadow:0 4px 24px rgba(26,111,168,0.10);--shadow2:0 8px 32px rgba(26,111,168,0.18);}
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+        /* DRAWER */
+        .overlay{position:fixed;inset:0;background:rgba(26,35,64,0.35);backdrop-filter:blur(4px);z-index:200;opacity:0;visibility:hidden;transition:all 0.3s;}
+        .overlay.open{opacity:1;visibility:visible;}
+        .drawer{position:fixed;top:0;left:0;bottom:0;width:285px;background:var(--white);z-index:201;transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:4px 0 32px rgba(26,35,64,0.12);}
+        .drawer.open{transform:translateX(0);}
+        .drawer-head{background:linear-gradient(135deg,var(--blue-dark),var(--navy2));padding:44px 20px 20px;}
+        .d-avatar{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:10px;}
+        .d-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:white;margin-bottom:2px;}
+        .d-sub{font-size:12px;color:rgba(255,255,255,0.65);}
+        .d-menu{flex:1;padding:10px 0;overflow-y:auto;}
+        .d-item{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:all 0.2s;}
+        .d-item:hover{background:var(--bg);}
+        .d-ico{width:38px;height:38px;border-radius:11px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+        .d-ttl{font-size:14px;font-weight:600;color:var(--text);}
+        .d-sttl{font-size:11px;color:var(--sub);}
+        .d-div{height:1px;background:var(--border);margin:6px 18px;}
+        .d-logout{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;}
+        .d-logout:hover{background:#FEF2F2;}
+        .d-logout-ico{width:38px;height:38px;border-radius:11px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;font-size:18px;}
+        .d-logout-txt{font-size:14px;font-weight:700;color:var(--coral);}
+
+        /* TOPBAR */
+        .topbar{position:fixed;top:0;left:0;right:0;height:58px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;box-shadow:0 1px 8px rgba(26,35,64,0.05);}
+        .menu-btn{width:38px;height:38px;border-radius:11px;background:var(--bg);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all 0.2s;}
+        .menu-btn:hover{background:var(--blue2);}
+        .m-line{width:16px;height:2px;background:var(--navy);border-radius:2px;}
+        .t-logo{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--navy);}
+        .t-logo span{color:var(--blue-dark);}
+        .t-right{display:flex;gap:8px;}
+        .t-btn{width:38px;height:38px;border-radius:11px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;position:relative;transition:all 0.2s;}
+        .t-btn:hover{border-color:var(--blue2);}
+        .t-badge{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--blue-dark);border:1.5px solid var(--white);}
+
+        /* PAGE */
+        .page{padding:70px 16px 100px;}
+
+        /* HERO */
+        .hero{padding:18px 0 20px;text-align:center;}
+        .hero-hi{font-size:13px;color:var(--sub);margin-bottom:4px;}
+        .hero-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--navy);margin-bottom:5px;line-height:1.2;}
+        .hero-title span{color:var(--blue-dark);}
+        .hero-sub{font-size:13px;color:var(--sub);line-height:1.5;}
+
+        /* SEARCH BAR */
+        .search-wrap{margin-bottom:16px;}
+        .search-bar{background:var(--white);border:2px solid var(--blue2);border-radius:18px;display:flex;align-items:center;padding:4px 4px 4px 14px;gap:8px;box-shadow:var(--shadow);transition:all 0.3s;margin-bottom:10px;}
+        .search-bar:focus-within{border-color:var(--blue-dark);box-shadow:var(--shadow2);}
+        .s-ico{font-size:18px;flex-shrink:0;}
+        .s-input{flex:1;border:none;outline:none;background:transparent;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;padding:10px 0;}
+        .s-input::placeholder{color:#B8C5D6;}
+        .s-cam{width:42px;height:42px;border-radius:13px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;border:none;flex-shrink:0;transition:all 0.2s;}
+        .s-cam:hover{background:var(--blue-dark);}
+        .fetch-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:15px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(26,111,168,0.3);}
+        .fetch-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,111,168,0.4);}
+
+        /* SECTION LABEL */
+        .sec-label{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:0.8px;margin:18px 0 10px;}
+
+        /* QUICK GRID */
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+        .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+        .g-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:14px 12px;cursor:pointer;transition:all 0.25s;box-shadow:0 1px 4px rgba(26,35,64,0.05);}
+        .g-card:hover{transform:translateY(-3px);box-shadow:var(--shadow2);border-color:var(--blue2);}
+        .g-ico{font-size:26px;margin-bottom:8px;display:block;}
+        .g-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px;}
+        .g-sub{font-size:10px;color:var(--sub);line-height:1.4;}
+
+        /* POPULAR LIST */
+        .pop-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px;}
+        .pop-item{background:var(--white);border:1px solid var(--border);border-radius:13px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all 0.2s;box-shadow:0 1px 4px rgba(26,35,64,0.04);}
+        .pop-item:hover{border-color:var(--blue2);transform:translateX(4px);box-shadow:var(--shadow);}
+        .pop-ico{width:38px;height:38px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+        .pop-ttl{font-size:13px;font-weight:700;color:var(--text);margin-bottom:1px;}
+        .pop-sttl{font-size:10px;color:var(--sub);}
+        .pop-arrow{margin-left:auto;color:var(--blue-dark);font-weight:700;font-size:14px;}
+
+        /* BOT FAB */
+        .bot-fab{position:fixed;bottom:26px;right:18px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;z-index:150;box-shadow:0 6px 22px rgba(26,111,168,0.4);border:none;animation:botPulse 2.5s ease-in-out infinite;transition:all 0.3s;}
+        .bot-fab:hover{transform:scale(1.1);}
+        @keyframes botPulse{0%,100%{box-shadow:0 6px 22px rgba(26,111,168,0.4)}50%{box-shadow:0 6px 30px rgba(26,111,168,0.65)}}
+
+        /* MODALS */
+        .m-overlay{position:fixed;inset:0;background:rgba(26,35,64,0.45);backdrop-filter:blur(6px);z-index:300;opacity:0;visibility:hidden;transition:all 0.3s;}
+        .m-overlay.open{opacity:1;visibility:visible;}
+        .modal{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-radius:26px 26px 0 0;z-index:301;padding:22px 18px 36px;transform:translateY(100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);max-height:90vh;overflow-y:auto;}
+        .modal.open{transform:translateY(0);}
+        .m-handle{width:38px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 18px;}
+        .m-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+        .m-sub{font-size:13px;color:var(--sub);margin-bottom:18px;line-height:1.5;}
+        .m-close{width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:13px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;font-family:'DM Sans',sans-serif;}
+        .btn-main{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
+        .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,111,168,0.35);}
+
+        /* BOT OPTIONS */
+        .bot-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+        .bot-opt{background:var(--bg);border:2px solid var(--border);border-radius:18px;padding:20px 12px;text-align:center;cursor:pointer;transition:all 0.25s;}
+        .bot-opt:hover{border-color:var(--blue2);background:var(--white);box-shadow:var(--shadow);}
+        .bot-opt-ico{font-size:34px;margin-bottom:10px;display:block;}
+        .bot-opt-ttl{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--navy);margin-bottom:3px;}
+        .bot-opt-sttl{font-size:11px;color:var(--sub);}
+
+        /* CHAT */
+        .chat-wrap{display:flex;flex-direction:column;height:55vh;}
+        .chat-msgs{flex:1;overflow-y:auto;padding:4px 0 12px;display:flex;flex-direction:column;gap:10px;}
+        .msg{display:flex;gap:8px;animation:msgIn 0.3s ease;}
+        @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .msg.user{flex-direction:row-reverse;}
+        .msg-av{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;align-self:flex-end;}
+        .msg.ai .msg-av{background:linear-gradient(135deg,var(--blue-dark),var(--navy2));}
+        .msg.user .msg-av{background:var(--bg);border:1px solid var(--border);}
+        .msg-bbl{max-width:80%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.6;}
+        .msg.ai .msg-bbl{background:var(--bg);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--text);}
+        .msg.user .msg-bbl{background:var(--blue-dark);color:white;border-bottom-right-radius:4px;}
+        .t-dot{width:7px;height:7px;border-radius:50%;background:var(--blue-dark);animation:tAnim 1.2s ease-in-out infinite;display:inline-block;margin:0 2px;}
+        .t-dot:nth-child(2){animation-delay:0.2s;}.t-dot:nth-child(3){animation-delay:0.4s;}
+        @keyframes tAnim{0%,100%{transform:scale(0.5);opacity:0.3}50%{transform:scale(1);opacity:1}}
+        .chat-bottom{border-top:1px solid var(--border);padding-top:12px;display:flex;gap:8px;align-items:center;}
+        .chat-input{flex:1;padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;}
+        .chat-input:focus{border-color:var(--blue-dark);}
+        .chat-input::placeholder{color:#B8C5D6;}
+        .chat-send{width:42px;height:42px;border-radius:13px;background:var(--blue-dark);color:white;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;}
+        .quick-qs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;margin-bottom:8px;}
+        .quick-qs::-webkit-scrollbar{display:none;}
+        .q-chip{padding:6px 12px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:11px;color:var(--sub);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.2s;}
+        .q-chip:hover{border-color:var(--blue2);color:var(--text);}
+
+        /* VOICE */
+        .voice-center{text-align:center;}
+        .v-bot{font-size:52px;display:block;margin-bottom:14px;animation:vFloat 2s ease-in-out infinite;}
+        @keyframes vFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        .v-mic{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));border:none;display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;margin:0 auto 14px;box-shadow:0 6px 20px rgba(26,111,168,0.4);transition:all 0.3s;}
+        .v-mic.listening{background:linear-gradient(135deg,var(--coral),#CC0000);animation:micP 0.8s ease-in-out infinite;}
+        @keyframes micP{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+        .v-status{font-size:13px;color:var(--sub);margin-bottom:18px;}
+        .v-cmds{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+        .v-cmd{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--sub);cursor:pointer;transition:all 0.2s;text-align:left;}
+        .v-cmd:hover{border-color:var(--blue2);color:var(--text);}
+
+        /* CAMERA */
+        .cam-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+        .cam-opt{background:var(--bg);border:2px solid var(--border);border-radius:16px;padding:18px 12px;text-align:center;cursor:pointer;transition:all 0.2s;}
+        .cam-opt:hover{border-color:var(--blue2);background:var(--white);box-shadow:var(--shadow);}
+        .cam-opt-ico{font-size:30px;margin-bottom:8px;display:block;}
+        .cam-opt-ttl{font-size:13px;font-weight:700;color:var(--navy);}
+        .cam-opt-sttl{font-size:11px;color:var(--sub);margin-top:2px;}
+        .doc-result-card{background:var(--bg);border:1.5px solid var(--blue2);border-radius:14px;padding:14px;margin-bottom:14px;display:none;}
+        .doc-result-card.show{display:block;}
+        .dr-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--navy);margin-bottom:8px;}
+        .dr-item{display:flex;gap:8px;margin-bottom:5px;}
+        .dr-dot{width:5px;height:5px;border-radius:50%;background:var(--blue-dark);flex-shrink:0;margin-top:5px;}
+        .dr-txt{font-size:12px;color:var(--sub);line-height:1.5;}
+        .btn-action{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;margin-bottom:8px;display:none;}
+        .btn-action.show{display:block;}
+
+        /* AUDITOR */
+        .audit-field{margin-bottom:12px;}
+        .audit-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--sub);margin-bottom:6px;display:flex;justify-content:space-between;}
+        .audit-input{width:100%;padding:12px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;}
+        .audit-input:focus{border-color:var(--blue-dark);}
+        .audit-input.ok{border-color:var(--mint);}
+        .audit-input.err{border-color:var(--coral);}
+        .audit-hint{font-size:11px;margin-top:4px;padding:5px 9px;border-radius:7px;display:none;}
+        .audit-hint.show{display:block;}
+        .audit-hint.ok{background:#ECFDF5;color:var(--mint);}
+        .audit-hint.err{background:#FEF2F2;color:var(--coral);}
+        .result-card{border-radius:14px;padding:13px;margin-bottom:8px;border:1px solid;}
+        .result-card.err{background:#FEF2F2;border-color:#FECACA;}
+        .result-card.ok{background:#ECFDF5;border-color:#A7F3D0;}
+        .result-card.warn{background:#FFFBEB;border-color:#FDE68A;}
+        .rc-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+        .rc-ico{font-size:18px;}
+        .rc-ttl{font-size:12px;font-weight:800;}
+        .result-card.err .rc-ttl{color:var(--coral);}
+        .result-card.ok .rc-ttl{color:var(--mint);}
+        .result-card.warn .rc-ttl{color:var(--amber);}
+        .rc-desc{font-size:11px;color:var(--sub);line-height:1.5;}
+        .score-wrap{text-align:center;margin-bottom:16px;}
+        .score-num{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;margin-bottom:4px;}
+        .score-lbl{font-size:12px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+        .score-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;margin:10px 0 6px;}
+        .score-fill{height:100%;border-radius:4px;transition:width 1s ease;}
+        .score-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--navy);}
+        .sum-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+        .sum-item{background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:10px;text-align:center;}
+        .sum-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;}
+        .sum-lbl{font-size:10px;color:var(--sub);margin-top:2px;}
+
+        /* ANALYZE OVERLAY */
+        .analyze-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.96);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+        .analyze-overlay.show{display:flex;}
+        .a-spin{width:78px;height:78px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--blue-dark);animation:spin 1s linear infinite;margin-bottom:18px;display:flex;align-items:center;justify-content:center;font-size:30px;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .a-ttl{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--navy);margin-bottom:5px;}
+        .a-sttl{font-size:13px;color:var(--sub);}
+        .a-steps{margin-top:18px;width:85%;max-width:360px;}
+        .a-step{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:11px;margin-bottom:7px;background:var(--bg);border:1px solid var(--border);transition:all 0.3s;}
+        .a-step.done{border-color:#A7F3D0;background:#ECFDF5;}
+        .a-step.active{border-color:var(--blue2);background:#EFF8FF;}
+        .a-step-ico{font-size:16px;}
+        .a-step-txt{font-size:12px;color:var(--sub);}
+        .a-step.done .a-step-txt{color:var(--mint);}
+        .a-step.active .a-step-txt{color:var(--blue-dark);}
+
+        /* TOAST */
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:11px;padding:11px 20px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;box-shadow:var(--shadow2);}
+        .toast.on{transform:translateX(-50%) translateY(0);}
+
+        /* FEATURE MODAL */
+        .feat-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+        .feat-opt{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:15px;cursor:pointer;transition:all 0.2s;}
+        .feat-opt:hover{border-color:var(--blue2);background:var(--white);box-shadow:var(--shadow);}
+        .feat-opt-ico{width:46px;height:46px;border-radius:13px;background:var(--white);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(26,35,64,0.08);}
+        .feat-opt-ttl{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--navy);margin-bottom:2px;}
+        .feat-opt-sttl{font-size:11px;color:var(--sub);}
+        .feat-arrow{margin-left:auto;color:var(--blue-dark);font-size:18px;font-weight:700;}
+    </style>
+</head>
+<body>
+    <!-- Drawer -->
+    <div class="overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="drawer">
+        <div class="drawer-head">
+            <div class="d-avatar">👤</div>
+            <div class="d-name" id="drawerName">User</div>
+            <div class="d-sub">FormAssist Member</div>
+        </div>
+        <div class="d-menu">
+            <div class="d-item" onclick="goTo('smart_search.html')"><div class="d-ico">🔗</div><div><div class="d-ttl">Smart Form Finder</div><div class="d-sttl">Paste link, auto-fill</div></div></div>
+            <div class="d-item" onclick="goTo('form_bharo.html')"><div class="d-ico">📄</div><div><div class="d-ttl">Form Filler</div><div class="d-sttl">Fill any form</div></div></div>
+            <div class="d-item" onclick="goTo('cv_banao.html')"><div class="d-ico">💼</div><div><div class="d-ttl">CV Builder</div><div class="d-sttl">AI creates professional CV</div></div></div>
+            <div class="d-item" onclick="goTo('application_likho.html')"><div class="d-ico">✍️</div><div><div class="d-ttl">Letter Writer</div><div class="d-sttl">AI writes letters</div></div></div>
+            <div class="d-item" onclick="openCamModal()"><div class="d-ico">📷</div><div><div class="d-ttl">Document Analysis</div><div class="d-sttl">Scan any document</div></div></div>
+            <div class="d-div"></div>
+            <div class="d-item" onclick="goTo('govt_schemes.html')"><div class="d-ico">🏛️</div><div><div class="d-ttl">Welfare Schemes</div><div class="d-sttl">Government schemes</div></div></div>
+            <div class="d-item" onclick="goTo('auto_fill.html')"><div class="d-ico">⚡</div><div><div class="d-ttl">Smart Auto-Fill</div><div class="d-sttl">Family vault profiles</div></div></div>
+            <div class="d-item" onclick="openAuditor()"><div class="d-ico">🛡️</div><div><div class="d-ttl">Form Auditor</div><div class="d-sttl">Verify & check form</div></div></div>
+            <div class="d-div"></div>
+            <div class="d-item" onclick="goTo('profile.html')"><div class="d-ico">👤</div><div><div class="d-ttl">Profile & History</div><div class="d-sttl">Account & saved forms</div></div></div>
+            <div class="d-item" onclick="goTo('settings.html')"><div class="d-ico">⚙️</div><div><div class="d-ttl">Settings</div><div class="d-sttl">Language, voice, security</div></div></div>
+        </div>
+        <div class="d-div"></div>
+        <div class="d-logout" onclick="doLogout()"><div class="d-logout-ico">🚪</div><div class="d-logout-txt">Logout</div></div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="menu-btn" onclick="openDrawer()"><div class="m-line"></div><div class="m-line"></div><div class="m-line"></div></div>
+        <div class="t-logo">Form<span>Assist</span></div>
+        <div class="t-right">
+            <div class="t-btn" onclick="toast('No new notifications')">🔔<div class="t-badge"></div></div>
+            <div class="t-btn" onclick="goTo('profile.html')">👤</div>
+        </div>
+    </div>
+
+    <!-- Main Page -->
+    <div class="page">
+        <div class="hero">
+            <div class="hero-hi">Hello! 👋</div>
+            <div class="hero-title">Which <span>form</span> today?</div>
+            <div class="hero-sub">Paste a link or scan a document — AI fills everything!</div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-wrap">
+            <div class="search-bar">
+                <span class="s-ico">🔍</span>
+                <input class="s-input" id="mainSearch" type="text" placeholder="Paste any form link here..." onkeydown="if(event.key==='Enter')fetchForm()">
+                <button class="s-cam" onclick="openCamModal()">📷</button>
+            </div>
+            <button class="fetch-btn" onclick="fetchForm()">🚀 Fetch & Auto-Fill Form</button>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="sec-label">Quick Actions</div>
+        <div class="grid-2">
+            <div class="g-card" onclick="goTo('form_bharo.html')"><span class="g-ico">📄</span><div class="g-title">Form Filler</div><div class="g-sub">Fill any form by voice or manually</div></div>
+            <div class="g-card" onclick="goTo('cv_banao.html')"><span class="g-ico">💼</span><div class="g-title">CV Builder</div><div class="g-sub">AI creates professional CV</div></div>
+        </div>
+        <div class="grid-3">
+            <div class="g-card" onclick="goTo('application_likho.html')"><span class="g-ico">✍️</span><div class="g-title">Letter Writer</div><div class="g-sub">AI writes applications</div></div>
+            <div class="g-card" onclick="openCamModal()"><span class="g-ico">📷</span><div class="g-title">Doc Analysis</div><div class="g-sub">Scan & understand</div></div>
+            <div class="g-card" onclick="goTo('govt_schemes.html')"><span class="g-ico">🏛️</span><div class="g-title">Schemes</div><div class="g-sub">Govt welfare</div></div>
+        </div>
+
+        <!-- Popular Forms -->
+        <div class="sec-label">Popular Government Forms</div>
+        <div class="pop-list">
+            <div class="pop-item" onclick="fillLink('https://passportindia.gov.in')"><div class="pop-ico">📘</div><div><div class="pop-ttl">Passport Application</div><div class="pop-sttl">passportindia.gov.in</div></div><span class="pop-arrow">→</span></div>
+            <div class="pop-item" onclick="fillLink('https://pmkisan.gov.in')"><div class="pop-ico">🌾</div><div><div class="pop-ttl">PM Kisan Registration</div><div class="pop-sttl">pmkisan.gov.in</div></div><span class="pop-arrow">→</span></div>
+            <div class="pop-item" onclick="fillLink('https://pmjay.gov.in')"><div class="pop-ico">🏥</div><div><div class="pop-ttl">Ayushman Bharat Card</div><div class="pop-sttl">pmjay.gov.in</div></div><span class="pop-arrow">→</span></div>
+            <div class="pop-item" onclick="fillLink('https://scholarships.gov.in')"><div class="pop-ico">🎓</div><div><div class="pop-ttl">National Scholarship</div><div class="pop-sttl">scholarships.gov.in</div></div><span class="pop-arrow">→</span></div>
+            <div class="pop-item" onclick="fillLink('https://www.incometax.gov.in')"><div class="pop-ico">💰</div><div><div class="pop-ttl">Income Tax Return</div><div class="pop-sttl">incometax.gov.in</div></div><span class="pop-arrow">→</span></div>
+        </div>
+    </div>
+
+    <!-- Bot FAB -->
+    <button class="bot-fab" onclick="openBotModal()">🤖</button>
+
+    <!-- Bot Modal -->
+    <div class="m-overlay" id="botOverlay" onclick="closeModal('bot')"></div>
+    <div class="modal" id="botModal">
+        <div class="m-handle"></div>
+        <div class="m-title">AI Assistant 🤖</div>
+        <div class="m-sub">How would you like to interact?</div>
+        <div class="bot-opts">
+            <div class="bot-opt" onclick="openChat()"><span class="bot-opt-ico">💬</span><div class="bot-opt-ttl">Chat</div><div class="bot-opt-sttl">Type your question</div></div>
+            <div class="bot-opt" onclick="openVoice()"><span class="bot-opt-ico">🎤</span><div class="bot-opt-ttl">Voice</div><div class="bot-opt-sttl">Speak your command</div></div>
+        </div>
+        <button class="m-close" onclick="closeModal('bot')">Close</button>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="m-overlay" id="chatOverlay" onclick="closeModal('chat')"></div>
+    <div class="modal" id="chatModal">
+        <div class="m-handle"></div>
+        <div class="m-title">AI Chat 💬</div>
+        <div class="quick-qs">
+            <div class="q-chip" onclick="sendQ('How to fill passport form?')">Passport form?</div>
+            <div class="q-chip" onclick="sendQ('What is PM Kisan scheme?')">PM Kisan?</div>
+            <div class="q-chip" onclick="sendQ('How to build a good CV?')">CV tips?</div>
+            <div class="q-chip" onclick="sendQ('Documents needed for bank account?')">Bank docs?</div>
+        </div>
+        <div class="chat-wrap">
+            <div class="chat-msgs" id="chatMsgs">
+                <div class="msg ai"><div class="msg-av">🤖</div><div class="msg-bbl">Hello! I'm your FormAssist AI. Ask me anything about forms, schemes, or documents!</div></div>
+            </div>
+            <div class="chat-bottom">
+                <input class="chat-input" id="chatInput" type="text" placeholder="Type your question..." onkeydown="if(event.key==='Enter')sendChat()">
+                <button class="chat-send" onclick="sendChat()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Modal -->
+    <div class="m-overlay" id="voiceOverlay" onclick="closeModal('voice')"></div>
+    <div class="modal" id="voiceModal">
+        <div class="m-handle"></div>
+        <div class="voice-center">
+            <span class="v-bot">🤖</span>
+            <div class="m-title">Voice Command</div>
+            <div class="m-sub">Speak a command and I'll do it!</div>
+            <button class="v-mic" id="vMic" onclick="toggleVoiceBtn()">🎤</button>
+            <div class="v-status" id="vStatus">Tap mic and speak...</div>
+        </div>
+        <div class="v-cmds">
+            <div class="v-cmd" onclick="handleCmd('open passport form')">💬 "Open passport form"</div>
+            <div class="v-cmd" onclick="handleCmd('build my cv')">💬 "Build my CV"</div>
+            <div class="v-cmd" onclick="handleCmd('show welfare schemes')">💬 "Show welfare schemes"</div>
+            <div class="v-cmd" onclick="handleCmd('analyze document')">💬 "Analyze document"</div>
+            <div class="v-cmd" onclick="handleCmd('write a leave letter')">💬 "Write a leave letter"</div>
+        </div>
+        <button class="m-close" onclick="closeModal('voice')">Close</button>
+    </div>
+
+    <!-- Camera Modal -->
+    <div class="m-overlay" id="camOverlay" onclick="closeCamModal()"></div>
+    <div class="modal" id="camModal">
+        <div class="m-handle"></div>
+        <div class="m-title">Document Analysis 📷</div>
+        <div class="m-sub">Take a photo or upload — AI will analyze automatically!</div>
+        <div class="cam-opts">
+            <div class="cam-opt" onclick="document.getElementById('cameraInput').click()"><span class="cam-opt-ico">📸</span><div class="cam-opt-ttl">Camera</div><div class="cam-opt-sttl">Take live photo</div></div>
+            <div class="cam-opt" onclick="document.getElementById('galleryInput').click()"><span class="cam-opt-ico">🖼️</span><div class="cam-opt-ttl">Gallery</div><div class="cam-opt-sttl">Upload from gallery</div></div>
+        </div>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleFileUpload(this)">
+        <input type="file" id="galleryInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(this)">
+        <div id="imgPreviewWrap" style="display:none;margin-bottom:12px;text-align:center;">
+            <img id="imgPreview" style="max-width:100%;max-height:180px;border-radius:14px;border:2px solid var(--blue2);">
+            <div style="font-size:11px;color:var(--sub);margin-top:5px;" id="imgFileName"></div>
+        </div>
+        <div class="doc-result-card" id="docResult">
+            <div class="dr-title" id="docResultTitle">📋 Document Detected</div>
+            <div class="dr-item"><div class="dr-dot"></div><div class="dr-txt" id="dr1">Aadhar Card required</div></div>
+            <div class="dr-item"><div class="dr-dot"></div><div class="dr-txt" id="dr2">PAN Card required</div></div>
+            <div class="dr-item"><div class="dr-dot"></div><div class="dr-txt" id="dr3">Passport size photo required</div></div>
+            <div class="dr-item"><div class="dr-dot"></div><div class="dr-txt" id="dr4">Address proof required</div></div>
+        </div>
+        <button class="btn-action" id="docFillBtn" onclick="closeCamModal();goTo('smart_search.html')">⚡ Auto-Fill This Form →</button>
+        <button class="m-close" onclick="closeCamModal()">Close</button>
+    </div>
+
+    <!-- Auditor Modal -->
+    <div class="m-overlay" id="auditorOverlay" onclick="closeModal('auditor')"></div>
+    <div class="modal" id="auditorModal">
+        <div class="m-handle"></div>
+        <div id="auditorStep1">
+            <div class="m-title">Form Auditor 🛡️</div>
+            <div class="m-sub">Paste a form link to verify it, or fill details to check before submitting.</div>
+            <div class="audit-field"><label class="audit-label">Form Link <span style="font-size:10px;color:var(--mint)">AI will verify</span></label><input class="audit-input" id="auditLink" type="text" placeholder="https://..." oninput="checkAuditLink(this)"></div>
+            <div class="audit-field"><label class="audit-label">Full Name <span style="font-size:10px;color:var(--coral)">Required</span></label><input class="audit-input" id="auditName" type="text" placeholder="As per documents" oninput="auditCheck('auditName','name',this)"><div class="audit-hint" id="auditNameHint"></div></div>
+            <div class="audit-field"><label class="audit-label">Mobile <span style="font-size:10px;color:var(--coral)">Required</span></label><input class="audit-input" id="auditMobile" type="tel" placeholder="10 digit" maxlength="10" oninput="auditCheck('auditMobile','mobile',this)"><div class="audit-hint" id="auditMobileHint"></div></div>
+            <div class="audit-field"><label class="audit-label">Aadhar <span style="font-size:10px;color:var(--coral)">Required</span></label><input class="audit-input" id="auditAadhar" type="text" placeholder="12 digits" maxlength="12" oninput="auditCheck('auditAadhar','aadhar',this)"><div class="audit-hint" id="auditAadharHint"></div></div>
+            <div class="audit-field"><label class="audit-label">PAN <span style="font-size:10px;color:var(--sub)">Optional</span></label><input class="audit-input" id="auditPan" type="text" placeholder="ABCDE1234F" maxlength="10" oninput="auditCheck('auditPan','pan',this)" style="text-transform:uppercase"><div class="audit-hint" id="auditPanHint"></div></div>
+            <button class="btn-main" onclick="runAudit()">🛡️ Run Audit</button>
+            <button class="m-close" onclick="closeModal('auditor')">Close</button>
+        </div>
+        <div id="auditorResult" style="display:none">
+            <div class="score-wrap">
+                <div class="score-num" id="auditScore" style="color:var(--mint)">--</div>
+                <div class="score-lbl">Safety Score</div>
+                <div class="score-bar"><div class="score-fill" id="auditScoreFill"></div></div>
+                <div class="score-title" id="auditScoreTitle"></div>
+            </div>
+            <div class="sum-row">
+                <div class="sum-item"><div class="sum-num" id="auditErr" style="color:var(--coral)">0</div><div class="sum-lbl">Errors</div></div>
+                <div class="sum-item"><div class="sum-num" id="auditWarn" style="color:var(--amber)">0</div><div class="sum-lbl">Warnings</div></div>
+                <div class="sum-item"><div class="sum-num" id="auditPass" style="color:var(--mint)">0</div><div class="sum-lbl">Passed</div></div>
+            </div>
+            <div id="auditResults"></div>
+            <button class="btn-main" onclick="document.getElementById('auditorResult').style.display='none';document.getElementById('auditorStep1').style.display='block'">Check Again</button>
+            <button class="m-close" onclick="closeModal('auditor')">Close</button>
+        </div>
+    </div>
+
+    <!-- Analyze Overlay -->
+    <div class="analyze-overlay" id="analyzeOverlay">
+        <div class="a-spin">🤖</div>
+        <div class="a-ttl">Analyzing Link...</div>
+        <div class="a-sttl">Please wait</div>
+        <div class="a-steps">
+            <div class="a-step" id="as1"><span class="a-step-ico">🔗</span><span class="a-step-txt">Verifying link...</span></div>
+            <div class="a-step" id="as2"><span class="a-step-ico">🤖</span><span class="a-step-txt">Identifying form type...</span></div>
+            <div class="a-step" id="as3"><span class="a-step-ico">📋</span><span class="a-step-txt">Checking required documents...</span></div>
+            <div class="a-step" id="as4"><span class="a-step-ico">👤</span><span class="a-step-txt">Matching your profile...</span></div>
+            <div class="a-step" id="as5"><span class="a-step-ico">⚡</span><span class="a-step-txt">Preparing auto-fill...</span></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toastEl"></div>
+    <script src="global-app.js"></script>
+    <script>
+        // Auth check
+        (function(){ if(!localStorage.getItem('fa_token')) window.location.href='index.html'; })();
+
+        function openDrawer(){document.getElementById('drawer').classList.add('open');document.getElementById('drawerOverlay').classList.add('open');}
+        function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerOverlay').classList.remove('open');}
+        function openModal(id){document.getElementById(id+'Overlay').classList.add('open');document.getElementById(id+'Modal').classList.add('open');}
+        function closeModal(id){document.getElementById(id+'Overlay').classList.remove('open');document.getElementById(id+'Modal').classList.remove('open');}
+        function goTo(url){closeDrawer();window.location.href=url;}
+        function doLogout(){if(confirm('Logout?')){localStorage.removeItem('fa_token');localStorage.removeItem('fa_username');window.location.href='index.html';}}
+
+        // Fetch form
+        function fetchForm(){var v=document.getElementById('mainSearch').value.trim();if(!v){toast('⚠️ Please paste a form link first!');return;}showAnalyze(v);}
+        function fillLink(url){document.getElementById('mainSearch').value=url;showAnalyze(url);}
+        function showAnalyze(url){
+            var o=document.getElementById('analyzeOverlay');o.classList.add('show');
+            var steps=['as1','as2','as3','as4','as5'];var i=0;
+            var iv=setInterval(function(){
+                if(i<steps.length){if(i>0){document.getElementById(steps[i-1]).classList.remove('active');document.getElementById(steps[i-1]).classList.add('done');}document.getElementById(steps[i]).classList.add('active');i++;}
+                else{clearInterval(iv);document.getElementById(steps[steps.length-1]).classList.remove('active');document.getElementById(steps[steps.length-1]).classList.add('done');
+                setTimeout(function(){o.classList.remove('show');steps.forEach(function(s){document.getElementById(s).className='a-step';});window.location.href='smart_search.html?url='+encodeURIComponent(url);},400);}
+            },600);
+        }
+
+        // Bot
+        function openBotModal(){closeDrawer();openModal('bot');}
+        function openChat(){closeModal('bot');openModal('chat');}
+        function openVoice(){closeModal('bot');openModal('voice');}
+        function openCamModal(){closeDrawer();closeModal('bot');openModal('cam');}
+        function openAuditor(){closeDrawer();openModal('auditor');}
+        function closeCamModal(){closeModal('cam');document.getElementById('docResult').classList.remove('show');document.getElementById('docFillBtn').classList.remove('show');document.getElementById('imgPreviewWrap').style.display='none';}
+
+        // Camera
+        function handleFileUpload(input){
+            if(!input.files||!input.files[0])return;
+            var file=input.files[0];
+            if(file.type.startsWith('image/')){
+                var reader=new FileReader();
+                reader.onload=function(e){document.getElementById('imgPreview').src=e.target.result;document.getElementById('imgPreviewWrap').style.display='block';document.getElementById('imgFileName').textContent=file.name;};
+                reader.readAsDataURL(file);
+            } else {document.getElementById('imgPreviewWrap').style.display='block';document.getElementById('imgFileName').textContent='📄 '+file.name;}
+            toast('🤖 AI analyzing...');
+            setTimeout(function(){
+                var fname=file.name.toLowerCase();
+                var detected='Government Document';
+                var docs=['Aadhar Card required','PAN Card required','Passport size photo','Address proof required'];
+                if(fname.includes('passport')){detected='Passport Application Form';}
+                else if(fname.includes('aadhar')||fname.includes('aadhaar')){detected='Aadhar Card';docs=['Original Aadhar Card','Address proof','Mobile number'];}
+                else if(fname.includes('pan')){detected='PAN Card';docs=['Aadhar Card','DOB proof','Passport photo'];}
+                document.getElementById('docResultTitle').textContent='📋 '+detected+' Detected';
+                docs.forEach(function(d,i){var el=document.getElementById('dr'+(i+1));if(el)el.textContent=d;});
+                document.getElementById('docResult').classList.add('show');
+                document.getElementById('docFillBtn').classList.add('show');
+                toast('✅ '+detected+' identified!');
+            },1500);
+        }
+
+        // Chat
+        var chatReplies={
+            'passport':'To apply for passport:\n1. Visit passportindia.gov.in\n2. Register and book appointment\n3. Documents: Aadhar, PAN, Address proof\n4. Fee: Normal ₹1500, Tatkal ₹3500\n\nWant me to auto-fill the form?',
+            'kisan':'PM Kisan gives ₹6,000/year to small farmers. Apply at pmkisan.gov.in with Aadhar, bank passbook and land records.',
+            'cv':'Good CV structure:\n1. Name & contact\n2. Summary (2-3 lines)\n3. Skills\n4. Education\n5. Experience\n\nUse our CV Builder for instant AI CV!',
+            'bank':'Bank account documents:\n- Aadhar Card\n- PAN Card\n- 1 Passport photo\n\nFor Jan Dhan (zero balance): Only Aadhar needed!',
+        };
+        function sendQ(q){document.getElementById('chatInput').value=q;sendChat();}
+        function sendChat(){
+            var inp=document.getElementById('chatInput');var msg=inp.value.trim();if(!msg)return;
+            inp.value='';addMsg('user',msg);
+            var typing=addMsg('ai','<span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>');
+            setTimeout(function(){
+                typing.remove();
+                var lower=msg.toLowerCase();
+                var reply='I can help! Try asking about passport, PM Kisan, CV building, or bank documents.';
+                if(lower.includes('passport'))reply=chatReplies['passport'];
+                else if(lower.includes('kisan'))reply=chatReplies['kisan'];
+                else if(lower.includes('cv')||lower.includes('resume'))reply=chatReplies['cv'];
+                else if(lower.includes('bank'))reply=chatReplies['bank'];
+                addMsg('ai',reply.replace(/\n/g,'<br>'));
+            },900);
+        }
+        function addMsg(type,content){
+            var msgs=document.getElementById('chatMsgs');
+            var div=document.createElement('div');div.className='msg '+type;
+            div.innerHTML='<div class="msg-av">'+(type==='ai'?'🤖':'👤')+'</div><div class="msg-bbl">'+content+'</div>';
+            msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;return div;
+        }
+
+        // Voice
+        var vListening=false;
+        function toggleVoiceBtn(){
+            vListening=!vListening;
+            var mic=document.getElementById('vMic');var status=document.getElementById('vStatus');
+            if(vListening){mic.classList.add('listening');mic.textContent='⏹';status.textContent='🎤 Listening... speak now!';
+                setTimeout(function(){if(vListening){handleCmd('open passport form');stopVoiceBtn();}},2500);
+            } else stopVoiceBtn();
+        }
+        function stopVoiceBtn(){vListening=false;var mic=document.getElementById('vMic');if(mic){mic.classList.remove('listening');mic.textContent='🎤';}document.getElementById('vStatus').textContent='Tap mic and speak...';}
+        function handleCmd(cmd){
+            document.getElementById('vStatus').textContent='✅ Got: "'+cmd+'"';
+            toast('🤖 Processing: "'+cmd+'"');
+            setTimeout(function(){
+                closeModal('voice');
+                if(cmd.includes('cv')||cmd.includes('resume'))goTo('cv_banao.html');
+                else if(cmd.includes('scheme')||cmd.includes('welfare'))goTo('govt_schemes.html');
+                else if(cmd.includes('letter')||cmd.includes('application'))goTo('application_likho.html');
+                else if(cmd.includes('document')||cmd.includes('analyze'))openCamModal();
+                else fillLink('https://passportindia.gov.in');
+            },1000);
+        }
+
+        // Auditor
+        function checkAuditLink(el){var v=el.value.trim();el.className='audit-input'+(v.includes('.gov')||v.includes('http')?' ok':v?' err':'');}
+        function auditCheck(hintId,type,el){
+            var v=el.value.trim();var hint=document.getElementById(hintId+'Hint');
+            var result={ok:false,msg:''};
+            if(type==='name'){if(/\d/.test(v)){result={ok:false,msg:'❌ Name cannot have numbers!'};}else if(v.length>=3){result={ok:true,msg:'✅ Name looks correct!'};}}
+            else if(type==='mobile'){v=v.replace(/\D/g,'');el.value=v;if(v.length===10&&['6','7','8','9'].includes(v[0])){result={ok:true,msg:'✅ Valid mobile!'};}else if(v.length>0){result={ok:false,msg:'❌ Enter valid 10-digit mobile!'};}}
+            else if(type==='aadhar'){v=v.replace(/\D/g,'');el.value=v;if(v.length===12&&!['0','1'].includes(v[0])){result={ok:true,msg:'✅ Valid Aadhar!'};}else if(v.length>0){result={ok:false,msg:'❌ Enter valid 12-digit Aadhar!'};}}
+            else if(type==='pan'){v=v.toUpperCase();el.value=v;if(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v)){result={ok:true,msg:'✅ Valid PAN!'};}else if(v.length>0){result={ok:false,msg:'❌ Format: ABCDE1234F'};}}
+            el.className='audit-input'+(result.ok?' ok':v?' err':'');
+            hint.className='audit-hint'+(result.msg?' '+(result.ok?'ok':'err')+' show':'');
+            hint.textContent=result.msg;
+        }
+        function runAudit(){
+            var name=document.getElementById('auditName').value.trim();
+            var mobile=document.getElementById('auditMobile').value.trim();
+            var aadhar=document.getElementById('auditAadhar').value.trim();
+            var pan=document.getElementById('auditPan').value.trim();
+            var link=document.getElementById('auditLink').value.trim();
+            if(!name||!mobile||!aadhar){toast('⚠️ Fill required fields!');return;}
+            var results=[];var errors=0,warnings=0,passed=0;
+            if(link){if(link.includes('.gov.in')){results.push({type:'ok',ico:'✅',ttl:'Valid Government Link',desc:'This is a legitimate government portal.'});passed++;}else if(link.startsWith('http')){results.push({type:'warn',ico:'⚠️',ttl:'Unverified Link',desc:'Not a known government portal. Verify before submitting.'});warnings++;}else{results.push({type:'err',ico:'❌',ttl:'Invalid Link',desc:'This does not look like a valid form link.'});errors++;}}
+            if(/\d/.test(name)){results.push({type:'err',ico:'❌',ttl:'Name has Numbers!',desc:'Names cannot contain numbers.'});errors++;}else{results.push({type:'ok',ico:'✅',ttl:'Name Format OK',desc:'Name format is valid.'});passed++;}
+            if(mobile.length===10&&['6','7','8','9'].includes(mobile[0])){results.push({type:'ok',ico:'✅',ttl:'Mobile Valid',desc:'Valid Indian mobile number.'});passed++;}else{results.push({type:'err',ico:'❌',ttl:'Invalid Mobile!',desc:'Enter valid 10-digit Indian mobile.'});errors++;}
+            if(aadhar.length===12&&!['0','1'].includes(aadhar[0])){results.push({type:'ok',ico:'✅',ttl:'Aadhar Format OK',desc:'Aadhar number format is correct.'});passed++;}else{results.push({type:'err',ico:'❌',ttl:'Invalid Aadhar!',desc:'Enter valid 12-digit Aadhar.'});errors++;}
+            if(pan){if(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)){results.push({type:'ok',ico:'✅',ttl:'PAN Format OK',desc:'PAN format is correct.'});passed++;}else{results.push({type:'err',ico:'❌',ttl:'Invalid PAN!',desc:'Format: ABCDE1234F'});errors++;}}
+            var total=errors+warnings+passed;var score=Math.round((passed/total)*100);if(errors>0)score=Math.min(score,60);
+            var sc=score>=80?'var(--mint)':score>=60?'var(--amber)':'var(--coral)';
+            document.getElementById('auditScore').textContent=score;document.getElementById('auditScore').style.color=sc;
+            document.getElementById('auditScoreFill').style.width=score+'%';document.getElementById('auditScoreFill').style.background=sc;
+            document.getElementById('auditScoreTitle').textContent=errors===0?'✅ Safe to Submit!':score>=60?'⚠️ Fix issues before submitting':'❌ Do NOT submit yet!';
+            document.getElementById('auditErr').textContent=errors;document.getElementById('auditWarn').textContent=warnings;document.getElementById('auditPass').textContent=passed;
+            var html='';results.forEach(function(r){html+='<div class="result-card '+r.type+'"><div class="rc-head"><span class="rc-ico">'+r.ico+'</span><span class="rc-ttl">'+r.ttl+'</span></div><div class="rc-desc">'+r.desc+'</div></div>';});
+            document.getElementById('auditResults').innerHTML=html;
+            document.getElementById('auditorStep1').style.display='none';document.getElementById('auditorResult').style.display='block';
+        }
+
+        // Load username
+        window.addEventListener('load',function(){
+            var uname=localStorage.getItem('fa_username');
+            if(uname) document.getElementById('drawerName').textContent=uname;
+        });
+
+        var tt;
+        function toast(msg){var el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('on');},2500);}
+    </script>
+</body>
+</html>

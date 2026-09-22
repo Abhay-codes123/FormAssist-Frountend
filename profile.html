@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormAssist - Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--white:#FFFFFF;--bg:#F4F7FB;--blue:#87CEEB;--blue2:#ADD8E6;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--amber:#F59E0B;--shadow:0 4px 24px rgba(26,111,168,0.10);--shadow2:0 8px 32px rgba(26,111,168,0.18);}
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;padding-bottom:40px;}
+
+        /* TOPBAR */
+        .topbar{position:fixed;top:0;left:0;right:0;height:58px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;box-shadow:0 1px 8px rgba(26,35,64,0.05);}
+        .t-back{width:38px;height:38px;border-radius:11px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+        .t-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);}
+        .t-save{padding:8px 18px;background:var(--blue-dark);color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:none;}
+        .t-save.show{display:block;}
+
+        .page{padding:70px 16px 20px;}
+
+        /* PROFILE HEADER */
+        .profile-header{background:linear-gradient(135deg,var(--blue-dark),var(--navy2));border-radius:22px;padding:28px 20px;text-align:center;margin-bottom:14px;}
+        .avatar-wrap{position:relative;width:90px;height:90px;margin:0 auto 14px;}
+        .avatar-circle{width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.2);border:3px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:38px;overflow:hidden;cursor:pointer;}
+        .avatar-circle img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none;}
+        .avatar-edit-badge{position:absolute;bottom:2px;right:2px;width:26px;height:26px;background:var(--white);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+        /* Hide file input completely */
+        .avatar-file-input{display:none !important;}
+        .p-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;margin-bottom:3px;}
+        .p-mobile{font-size:13px;color:rgba(255,255,255,0.7);}
+
+        /* SECTION */
+        .section{background:var(--white);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(26,35,64,0.05);}
+        .sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+        .sec-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:0.8px;}
+        .edit-btn{padding:6px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;color:var(--blue-dark);cursor:pointer;}
+        .edit-btn:hover{border-color:var(--blue-dark);}
+
+        /* FIELD ROWS */
+        .field-row{margin-bottom:14px;}
+        .field-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--sub);margin-bottom:5px;display:block;}
+        .field-val{font-size:14px;color:var(--text);font-weight:500;min-height:20px;}
+        .field-input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;display:none;}
+        .field-input:focus{border-color:var(--blue-dark);background:var(--white);box-shadow:0 0 0 3px rgba(26,111,168,0.1);}
+        .field-input::placeholder{color:#B8C5D6;}
+        /* When editing */
+        body.editing .field-val{display:none;}
+        body.editing .field-input{display:block;}
+        body.editing .field-val.always-show{display:block;}
+
+        /* FAMILY */
+        .family-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+        .family-card{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:13px;}
+        .fam-ava{width:40px;height:40px;border-radius:50%;background:var(--blue2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+        .fam-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+        .fam-rel{font-size:11px;color:var(--sub);}
+        .fam-btns{margin-left:auto;display:flex;gap:6px;}
+        .fam-btn{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
+        .fam-edit{background:#EFF8FF;color:var(--blue-dark);}
+        .fam-del{background:#FEF2F2;color:var(--coral);}
+        .no-family{text-align:center;padding:20px;color:var(--sub);font-size:13px;}
+        .add-fam-btn{width:100%;padding:12px;background:var(--bg);border:2px dashed var(--border);border-radius:12px;color:var(--blue-dark);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+        .add-fam-btn:hover{border-color:var(--blue-dark);background:#EFF8FF;}
+
+        /* ACTION ITEMS */
+        .action-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+        .action-item:last-child{border-bottom:none;}
+        .action-item:hover{opacity:0.75;}
+        .action-ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+        .action-txt{flex:1;}
+        .action-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;}
+        .action-sub{font-size:11px;color:var(--sub);}
+        .action-arrow{font-size:18px;color:var(--sub);}
+        .action-item.danger .action-name{color:var(--coral);}
+
+        /* BUTTONS */
+        .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,111,168,0.35);}
+        .btn-secondary{width:100%;padding:13px;background:var(--white);border:1.5px solid var(--border);border-radius:14px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px;}
+
+        /* MODAL */
+        .m-overlay{position:fixed;inset:0;background:rgba(26,35,64,0.45);backdrop-filter:blur(6px);z-index:300;opacity:0;visibility:hidden;transition:all 0.3s;}
+        .m-overlay.open{opacity:1;visibility:visible;}
+        .modal{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-radius:26px 26px 0 0;z-index:301;padding:22px 18px 36px;transform:translateY(100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);max-height:90vh;overflow-y:auto;}
+        .modal.open{transform:translateY(0);}
+        .m-handle{width:38px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 18px;}
+        .m-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+        .m-sub{font-size:13px;color:var(--sub);margin-bottom:18px;line-height:1.5;}
+        .m-field{margin-bottom:12px;}
+        .m-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--sub);margin-bottom:6px;display:block;}
+        .m-input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;}
+        .m-input:focus{border-color:var(--blue-dark);}
+        .m-input::placeholder{color:#B8C5D6;}
+        .m-select{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;}
+        .m-close{width:100%;padding:13px;background:var(--bg);border:1px solid var(--border);border-radius:13px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;font-family:'DM Sans',sans-serif;}
+        .error-box{background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:9px 13px;font-size:12px;color:var(--coral);margin-bottom:12px;display:none;}
+        .error-box.show{display:block;}
+        .warn-box{background:#FEF2F2;border:1.5px solid #FECACA;border-radius:12px;padding:12px 14px;font-size:13px;color:var(--coral);margin-bottom:14px;line-height:1.5;}
+
+        /* TOAST */
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:12px;padding:11px 20px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;box-shadow:var(--shadow2);}
+        .toast.on{transform:translateX(-50%) translateY(0);}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="t-back" onclick="window.location.href='home.html'">←</div>
+        <div class="t-title">Profile</div>
+        <button class="t-save" id="saveBtn" onclick="saveProfile()">Save</button>
+    </div>
+
+    <div class="page">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="avatar-wrap">
+                <div class="avatar-circle" id="avatarCircle" onclick="document.getElementById('avatarFile').click()">
+                    👤
+                    <img id="avatarImg" src="" alt="">
+                </div>
+                <div class="avatar-edit-badge" onclick="document.getElementById('avatarFile').click()">✏️</div>
+                <input type="file" id="avatarFile" class="avatar-file-input" accept="image/*" onchange="changeAvatar(this)">
+            </div>
+            <div class="p-name" id="headerName">User</div>
+            <div class="p-mobile" id="headerMobile">+91 ----------</div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="section">
+            <div class="sec-header">
+                <div class="sec-title">Personal Information</div>
+                <button class="edit-btn" id="editBtn" onclick="toggleEdit()">✏️ Edit</button>
+            </div>
+
+            <div class="field-row">
+                <label class="field-lbl">Full Name</label>
+                <div class="field-val" id="vName">--</div>
+                <input class="field-input" id="iName" type="text" placeholder="Enter your full name">
+            </div>
+            <div class="field-row">
+                <label class="field-lbl">Mobile Number</label>
+                <div class="field-val" id="vMobile">--</div>
+                <input class="field-input" id="iMobile" type="tel" placeholder="10 digit mobile" maxlength="10">
+            </div>
+            <div class="field-row">
+                <label class="field-lbl">Email</label>
+                <div class="field-val" id="vEmail">--</div>
+                <input class="field-input" id="iEmail" type="email" placeholder="your@email.com">
+            </div>
+            <div class="field-row">
+                <label class="field-lbl">Date of Birth</label>
+                <div class="field-val" id="vDob">--</div>
+                <input class="field-input" id="iDob" type="date">
+            </div>
+            <div class="field-row">
+                <label class="field-lbl">Address</label>
+                <div class="field-val" id="vAddress">--</div>
+                <input class="field-input" id="iAddress" type="text" placeholder="Full address">
+            </div>
+            <div class="field-row">
+                <label class="field-lbl">Pincode</label>
+                <div class="field-val" id="vPin">--</div>
+                <input class="field-input" id="iPin" type="text" placeholder="6 digit pincode" maxlength="6">
+            </div>
+        </div>
+
+        <!-- Family Members -->
+        <div class="section">
+            <div class="sec-header">
+                <div class="sec-title">Family Members</div>
+            </div>
+            <div class="family-list" id="familyList">
+                <div class="no-family">No family members added yet</div>
+            </div>
+            <button class="add-fam-btn" onclick="openAddFamily()">+ Add Family Member</button>
+        </div>
+
+        <!-- Account Actions -->
+        <div class="section">
+            <div class="sec-title" style="margin-bottom:14px">Account</div>
+
+            <div class="action-item" onclick="openModal('reset')">
+                <div class="action-ico" style="background:#EFF8FF">🔐</div>
+                <div class="action-txt">
+                    <div class="action-name">Reset Password</div>
+                    <div class="action-sub">Change your account password</div>
+                </div>
+                <span class="action-arrow">›</span>
+            </div>
+
+            <div class="action-item" onclick="doLogout()">
+                <div class="action-ico" style="background:#FFFBEB">🚪</div>
+                <div class="action-txt">
+                    <div class="action-name">Logout</div>
+                    <div class="action-sub">Sign out from this device</div>
+                </div>
+                <span class="action-arrow">›</span>
+            </div>
+
+            <div class="action-item danger" onclick="openModal('delete')">
+                <div class="action-ico" style="background:#FEF2F2">🗑️</div>
+                <div class="action-txt">
+                    <div class="action-name">Delete Account</div>
+                    <div class="action-sub">Permanently delete all your data</div>
+                </div>
+                <span class="action-arrow">›</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Family Modal -->
+    <div class="m-overlay" id="familyOverlay" onclick="closeModal('family')"></div>
+    <div class="modal" id="familyModal">
+        <div class="m-handle"></div>
+        <div class="m-title" id="famModalTitle">Add Family Member</div>
+        <div class="m-sub">Save their details for quick auto-fill</div>
+        <div class="error-box" id="famErr"></div>
+        <div class="m-field">
+            <label class="m-label">Full Name *</label>
+            <input class="m-input" id="fm_name" type="text" placeholder="Member's full name">
+        </div>
+        <div class="m-field">
+            <label class="m-label">Relation *</label>
+            <select class="m-select" id="fm_rel">
+                <option value="">Select relation</option>
+                <option value="Spouse">Spouse</option>
+                <option value="Father">Father</option>
+                <option value="Mother">Mother</option>
+                <option value="Son">Son</option>
+                <option value="Daughter">Daughter</option>
+                <option value="Brother">Brother</option>
+                <option value="Sister">Sister</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="m-field">
+            <label class="m-label">Mobile</label>
+            <input class="m-input" id="fm_mobile" type="tel" placeholder="10 digit mobile" maxlength="10">
+        </div>
+        <div class="m-field">
+            <label class="m-label">Date of Birth</label>
+            <input class="m-input" id="fm_dob" type="date">
+        </div>
+        <div class="m-field">
+            <label class="m-label">Aadhar Number</label>
+            <input class="m-input" id="fm_aadhar" type="text" placeholder="12 digit (optional)" maxlength="12">
+        </div>
+        <button class="btn-primary" onclick="saveFamilyMember()">Save Member</button>
+        <button class="m-close" onclick="closeModal('family')">Cancel</button>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="m-overlay" id="resetOverlay" onclick="closeModal('reset')"></div>
+    <div class="modal" id="resetModal">
+        <div class="m-handle"></div>
+        <div class="m-title">Reset Password 🔐</div>
+        <div class="m-sub">Enter your secret phrase to verify identity</div>
+        <div class="error-box" id="resetErr"></div>
+        <div class="m-field">
+            <label class="m-label">Secret Phrase *</label>
+            <input class="m-input" id="r_phrase" type="text" placeholder="Enter your secret phrase">
+        </div>
+        <div class="m-field">
+            <label class="m-label">New Password *</label>
+            <input class="m-input" id="r_newpass" type="password" placeholder="Min 6 characters">
+        </div>
+        <div class="m-field">
+            <label class="m-label">Confirm New Password *</label>
+            <input class="m-input" id="r_confpass" type="password" placeholder="Re-enter new password">
+        </div>
+        <button class="btn-primary" onclick="resetPassword()">Reset Password</button>
+        <button class="m-close" onclick="closeModal('reset')">Cancel</button>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div class="m-overlay" id="deleteOverlay" onclick="closeModal('delete')"></div>
+    <div class="modal" id="deleteModal">
+        <div class="m-handle"></div>
+        <div class="m-title">Delete Account 🗑️</div>
+        <div class="warn-box">⚠️ Warning: This will permanently delete all your data. This action cannot be undone!</div>
+        <div class="error-box" id="deleteErr"></div>
+        <div class="m-field">
+            <label class="m-label">Enter your password *</label>
+            <input class="m-input" id="d_pass" type="password" placeholder="Your current password">
+        </div>
+        <div class="m-field">
+            <label class="m-label">Type "DELETE" to confirm *</label>
+            <input class="m-input" id="d_confirm" type="text" placeholder='Type DELETE'>
+        </div>
+        <button class="btn-primary" style="background:linear-gradient(135deg,var(--coral),#CC0000)" onclick="deleteAccount()">Yes, Delete My Account</button>
+        <button class="m-close" onclick="closeModal('delete')">Cancel</button>
+    </div>
+
+    <div class="toast" id="toastEl"></div>
+    <script src="global-app.js"></script>
+    <script>
+        var isEditing = false;
+        var editingFamIdx = -1;
+        var familyMembers = [];
+        var profile = {};
+        var emojis = {Spouse:'💑',Father:'👨',Mother:'👩',Son:'👦',Daughter:'👧',Brother:'🧑',Sister:'👧',Other:'👤'};
+
+        window.addEventListener('load', function(){
+            loadProfile();
+            loadFamily();
+        });
+
+        function loadProfile(){
+            var saved = localStorage.getItem('fa_vault_self');
+            if(saved) profile = JSON.parse(saved);
+            var uname = localStorage.getItem('fa_username') || 'User';
+
+            document.getElementById('headerName').textContent = profile.name || uname;
+            document.getElementById('headerMobile').textContent = profile.mobile ? '+91 '+profile.mobile : '+91 ----------';
+
+            document.getElementById('vName').textContent = profile.name || '--';
+            document.getElementById('vMobile').textContent = profile.mobile || '--';
+            document.getElementById('vEmail').textContent = profile.email || '--';
+            document.getElementById('vDob').textContent = profile.dob || '--';
+            document.getElementById('vAddress').textContent = profile.address || '--';
+            document.getElementById('vPin').textContent = profile.pin || '--';
+
+            // Avatar
+            var avatar = localStorage.getItem('fa_avatar');
+            if(avatar){
+                document.getElementById('avatarImg').src = avatar;
+                document.getElementById('avatarImg').style.display = 'block';
+                document.getElementById('avatarCircle').textContent = '';
+                document.getElementById('avatarCircle').appendChild(document.getElementById('avatarImg'));
+            }
+        }
+
+        function changeAvatar(input){
+            if(!input.files||!input.files[0]) return;
+            var reader = new FileReader();
+            reader.onload = function(e){
+                localStorage.setItem('fa_avatar', e.target.result);
+                var img = document.getElementById('avatarImg');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                var circle = document.getElementById('avatarCircle');
+                circle.innerHTML = '';
+                circle.appendChild(img);
+                toast('✅ Profile photo updated!');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function toggleEdit(){
+            isEditing = !isEditing;
+            if(isEditing){
+                document.body.classList.add('editing');
+                document.getElementById('editBtn').textContent = '✕ Cancel';
+                document.getElementById('saveBtn').classList.add('show');
+                // Fill inputs with current values
+                document.getElementById('iName').value = profile.name || '';
+                document.getElementById('iMobile').value = profile.mobile || '';
+                document.getElementById('iEmail').value = profile.email || '';
+                document.getElementById('iDob').value = profile.dob || '';
+                document.getElementById('iAddress').value = profile.address || '';
+                document.getElementById('iPin').value = profile.pin || '';
+            } else {
+                document.body.classList.remove('editing');
+                document.getElementById('editBtn').textContent = '✏️ Edit';
+                document.getElementById('saveBtn').classList.remove('show');
+            }
+        }
+
+        function saveProfile(){
+            profile.name = document.getElementById('iName').value.trim();
+            profile.mobile = document.getElementById('iMobile').value.trim();
+            profile.email = document.getElementById('iEmail').value.trim();
+            profile.dob = document.getElementById('iDob').value;
+            profile.address = document.getElementById('iAddress').value.trim();
+            profile.pin = document.getElementById('iPin').value.trim();
+            localStorage.setItem('fa_vault_self', JSON.stringify(profile));
+            toggleEdit();
+            loadProfile();
+            toast('✅ Profile saved!');
+        }
+
+        function loadFamily(){
+            var saved = localStorage.getItem('fa_family');
+            if(saved) familyMembers = JSON.parse(saved);
+            renderFamily();
+        }
+
+        function renderFamily(){
+            var list = document.getElementById('familyList');
+            if(familyMembers.length===0){
+                list.innerHTML='<div class="no-family">No family members added yet</div>';
+                return;
+            }
+            list.innerHTML = familyMembers.map(function(m,i){
+                return '<div class="family-card">' +
+                    '<div class="fam-ava">'+(emojis[m.relation]||'👤')+'</div>' +
+                    '<div style="flex:1"><div class="fam-name">'+m.name+'</div><div class="fam-rel">'+m.relation+(m.mobile?' • '+m.mobile:'')+'</div></div>' +
+                    '<div class="fam-btns"><button class="fam-btn fam-edit" onclick="editFamily('+i+')">✏️</button><button class="fam-btn fam-del" onclick="deleteFamily('+i+')">🗑️</button></div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function openAddFamily(){
+            editingFamIdx = -1;
+            document.getElementById('famModalTitle').textContent = 'Add Family Member';
+            document.getElementById('fm_name').value='';
+            document.getElementById('fm_rel').value='';
+            document.getElementById('fm_mobile').value='';
+            document.getElementById('fm_dob').value='';
+            document.getElementById('fm_aadhar').value='';
+            document.getElementById('famErr').classList.remove('show');
+            openModal('family');
+        }
+
+        function editFamily(idx){
+            editingFamIdx = idx;
+            var m = familyMembers[idx];
+            document.getElementById('famModalTitle').textContent = 'Edit Family Member';
+            document.getElementById('fm_name').value = m.name||'';
+            document.getElementById('fm_rel').value = m.relation||'';
+            document.getElementById('fm_mobile').value = m.mobile||'';
+            document.getElementById('fm_dob').value = m.dob||'';
+            document.getElementById('fm_aadhar').value = m.aadhar||'';
+            openModal('family');
+        }
+
+        function saveFamilyMember(){
+            var name = document.getElementById('fm_name').value.trim();
+            var rel = document.getElementById('fm_rel').value;
+            var errBox = document.getElementById('famErr');
+            if(!name||!rel){errBox.textContent='Please enter name and relation!';errBox.classList.add('show');return;}
+            errBox.classList.remove('show');
+            var member = {
+                name:name, relation:rel,
+                mobile:document.getElementById('fm_mobile').value.trim(),
+                dob:document.getElementById('fm_dob').value,
+                aadhar:document.getElementById('fm_aadhar').value.trim()
+            };
+            if(editingFamIdx>=0) familyMembers[editingFamIdx]=member;
+            else familyMembers.push(member);
+            localStorage.setItem('fa_family', JSON.stringify(familyMembers));
+            renderFamily();
+            closeModal('family');
+            toast(editingFamIdx>=0?'✅ Member updated!':'✅ Member added!');
+        }
+
+        function deleteFamily(idx){
+            if(confirm('Remove '+familyMembers[idx].name+'?')){
+                familyMembers.splice(idx,1);
+                localStorage.setItem('fa_family',JSON.stringify(familyMembers));
+                renderFamily();
+                toast('✅ Member removed!');
+            }
+        }
+
+        function resetPassword(){
+            var phrase = document.getElementById('r_phrase').value.trim();
+            var newPass = document.getElementById('r_newpass').value;
+            var confPass = document.getElementById('r_confpass').value;
+            var errBox = document.getElementById('resetErr');
+            if(!phrase){errBox.textContent='Please enter your secret phrase!';errBox.classList.add('show');return;}
+            if(newPass.length<6){errBox.textContent='Password must be at least 6 characters!';errBox.classList.add('show');return;}
+            if(newPass!==confPass){errBox.textContent='Passwords do not match!';errBox.classList.add('show');return;}
+            errBox.classList.remove('show');
+            localStorage.setItem('fa_pass_updated','true');
+            closeModal('reset');
+            toast('✅ Password reset successfully!');
+        }
+
+        function deleteAccount(){
+            var pass = document.getElementById('d_pass').value;
+            var conf = document.getElementById('d_confirm').value;
+            var errBox = document.getElementById('deleteErr');
+            if(!pass){errBox.textContent='Please enter your password!';errBox.classList.add('show');return;}
+            if(conf!=='DELETE'){errBox.textContent='Please type DELETE to confirm!';errBox.classList.add('show');return;}
+            errBox.classList.remove('show');
+            localStorage.clear();
+            toast('Account deleted!');
+            setTimeout(function(){window.location.href='index.html';},1000);
+        }
+
+        function doLogout(){
+            if(confirm('Are you sure you want to logout?')){
+                localStorage.removeItem('fa_token');
+                localStorage.removeItem('fa_username');
+                localStorage.removeItem('fa_demo_mode');
+                window.location.href='index.html';
+            }
+        }
+
+        function openModal(id){
+            document.getElementById(id+'Overlay').classList.add('open');
+            document.getElementById(id+'Modal').classList.add('open');
+        }
+        function closeModal(id){
+            document.getElementById(id+'Overlay').classList.remove('open');
+            document.getElementById(id+'Modal').classList.remove('open');
+        }
+
+        var tt;
+        function toast(msg){var el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('on');},2500);}
+    </script>
+</body>
+</html>

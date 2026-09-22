@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormAssist - Form Filler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--white:#FFFFFF;--bg:#F4F7FB;--blue:#87CEEB;--blue2:#ADD8E6;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--amber:#F59E0B;--shadow:0 4px 24px rgba(26,111,168,0.10);--shadow2:0 8px 32px rgba(26,111,168,0.18);}
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;padding-bottom:40px;}
+        .topbar{position:fixed;top:0;left:0;right:0;height:58px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;box-shadow:0 1px 8px rgba(26,35,64,0.05);}
+        .t-back{width:38px;height:38px;border-radius:11px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+        .t-back:hover{background:var(--blue2);}
+        .t-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);}
+        .t-title span{color:var(--blue-dark);}
+        .page{padding:70px 16px 20px;}
+        /* HERO */
+        .hero-card{background:linear-gradient(135deg,var(--blue-dark),var(--navy2));border-radius:22px;padding:24px;text-align:center;margin-bottom:16px;color:white;}
+        .hero-ico{font-size:48px;display:block;margin-bottom:12px;animation:float 3s ease-in-out infinite;}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        .hero-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;}
+        .hero-sub{font-size:13px;opacity:0.8;line-height:1.6;}
+        /* SECTION */
+        .section{background:var(--white);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(26,35,64,0.05);}
+        .sec-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
+        /* MODE CARDS */
+        .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+        .mode-card{background:var(--bg);border:2px solid var(--border);border-radius:16px;padding:18px 12px;text-align:center;cursor:pointer;transition:all 0.25s;}
+        .mode-card:hover,.mode-card.active{border-color:var(--blue-dark);background:#EFF8FF;box-shadow:var(--shadow);}
+        .mode-ico{font-size:32px;display:block;margin-bottom:10px;}
+        .mode-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--navy);margin-bottom:3px;}
+        .mode-sub{font-size:11px;color:var(--sub);}
+        .mode-badge{display:inline-block;background:var(--mint);color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:5px;}
+        /* CATEGORY */
+        .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+        .cat-card{background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:14px 12px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:10px;}
+        .cat-card:hover,.cat-card.active{border-color:var(--blue-dark);background:#EFF8FF;}
+        .cat-ico{width:38px;height:38px;border-radius:10px;background:var(--white);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 2px 6px rgba(26,35,64,0.08);}
+        .cat-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--navy);}
+        .cat-sub{font-size:10px;color:var(--sub);}
+        /* FORM FIELDS */
+        .field-group{margin-bottom:14px;}
+        .field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--sub);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;}
+        .field-req{color:var(--coral);font-size:10px;}
+        .field-input{width:100%;padding:13px 15px;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;}
+        .field-input:focus{border-color:var(--blue-dark);background:var(--white);box-shadow:0 0 0 3px rgba(26,111,168,0.1);}
+        .field-input::placeholder{color:#B8C5D6;}
+        .field-input.ok{border-color:var(--mint);}
+        .field-input.err{border-color:var(--coral);}
+        .field-select{width:100%;padding:13px 15px;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;}
+        .field-select:focus{border-color:var(--blue-dark);}
+        .field-hint{font-size:11px;color:var(--sub);margin-top:5px;padding-left:2px;}
+        .field-hint.err{color:var(--coral);}
+        /* VOICE BOX */
+        .voice-box{background:linear-gradient(135deg,rgba(26,111,168,0.08),rgba(44,62,107,0.08));border:2px solid var(--blue2);border-radius:18px;padding:24px;text-align:center;margin-bottom:12px;}
+        .voice-box.listening{border-color:var(--coral);background:rgba(239,68,68,0.05);}
+        .v-mic-btn{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));border:none;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;margin:0 auto 14px;box-shadow:0 6px 20px rgba(26,111,168,0.35);transition:all 0.3s;}
+        .v-mic-btn.listening{background:linear-gradient(135deg,var(--coral),#CC0000);animation:pulse 0.8s ease-in-out infinite;}
+        @keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 6px 20px rgba(239,68,68,0.35)}50%{transform:scale(1.08);box-shadow:0 8px 28px rgba(239,68,68,0.5)}}
+        .v-status{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+        .v-sub{font-size:12px;color:var(--sub);}
+        .v-transcript{background:var(--white);border:1.5px solid var(--blue2);border-radius:12px;padding:12px;margin-top:12px;font-size:13px;color:var(--text);min-height:48px;line-height:1.6;display:none;text-align:left;}
+        .v-transcript.show{display:block;}
+        /* PROGRESS */
+        .progress-bar{height:6px;background:var(--border);border-radius:3px;margin-bottom:16px;overflow:hidden;}
+        .progress-fill{height:100%;background:linear-gradient(90deg,var(--blue-dark),var(--blue));border-radius:3px;transition:width 0.5s ease;}
+        .progress-txt{font-size:11px;color:var(--sub);text-align:right;margin-bottom:6px;}
+        /* AUTOFILL BTN */
+        .autofill-row{display:flex;gap:8px;margin-bottom:12px;}
+        .autofill-btn{flex:1;padding:11px;background:#EFF8FF;border:1.5px solid var(--blue2);border-radius:12px;color:var(--blue-dark);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'DM Sans',sans-serif;}
+        .autofill-btn:hover{background:rgba(26,111,168,0.12);}
+        /* BUTTONS */
+        .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,111,168,0.35);}
+        .btn-primary:disabled{opacity:0.7;cursor:not-allowed;transform:none;}
+        .btn-secondary{width:100%;padding:13px;background:var(--white);border:1.5px solid var(--border);border-radius:14px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px;}
+        .btn-secondary:hover{border-color:var(--blue2);}
+        /* SUCCESS */
+        .success-screen{text-align:center;padding:32px 16px;display:none;}
+        .success-screen.show{display:block;}
+        .success-ico{font-size:72px;display:block;margin-bottom:16px;animation:pop 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+        @keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+        .success-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px;}
+        .success-sub{font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px;}
+        .success-detail{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:left;margin-bottom:20px;}
+        .sd-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+        .sd-row:last-child{border-bottom:none;}
+        .sd-key{color:var(--sub);font-weight:500;}
+        .sd-val{color:var(--text);font-weight:700;}
+        /* TOAST */
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:12px;padding:11px 20px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;box-shadow:var(--shadow2);}
+        .toast.on{transform:translateX(-50%) translateY(0);}
+        @media print {
+            .topbar, #step1, #step2, .toast { display: none !important; }
+            body { background: white; padding: 20px; }
+            .success-screen { display: block !important; }
+            .success-detail { border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="t-back" onclick="window.location.href='home.html'">←</div>
+        <div class="t-title">Form <span>Filler</span></div>
+        <div style="width:38px"></div>
+    </div>
+
+    <div class="page">
+        <!-- Hero -->
+        <div class="hero-card">
+            <span class="hero-ico">📄</span>
+            <div class="hero-title">Fill Any Form</div>
+            <div class="hero-sub">Voice se bolkar ya manually — AI aapki help karega!</div>
+        </div>
+
+        <!-- Step 1: Mode Selection -->
+        <div id="step1">
+            <div class="section">
+                <div class="sec-title">How do you want to fill?</div>
+                <div class="mode-grid">
+                    <div class="mode-card active" id="modeVoice" onclick="selectMode('voice')">
+                        <span class="mode-ico">🎤</span>
+                        <div class="mode-title">Voice</div>
+                        <div class="mode-sub">Bolkar form bharein</div>
+                        <div class="mode-badge">Recommended</div>
+                    </div>
+                    <div class="mode-card" id="modeManual" onclick="selectMode('manual')">
+                        <span class="mode-ico">✍️</span>
+                        <div class="mode-title">Manual</div>
+                        <div class="mode-sub">Khud type karein</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="sec-title">Which form to fill?</div>
+                <div class="cat-grid">
+                    <div class="cat-card" onclick="selectCat('bank','Bank Account / KYC')">
+                        <div class="cat-ico">🏦</div>
+                        <div><div class="cat-name">Bank</div><div class="cat-sub">Account, KYC</div></div>
+                    </div>
+                    <div class="cat-card" onclick="selectCat('hospital','Hospital / OPD')">
+                        <div class="cat-ico">🏥</div>
+                        <div><div class="cat-name">Hospital</div><div class="cat-sub">OPD, Admission</div></div>
+                    </div>
+                    <div class="cat-card" onclick="selectCat('school','School / College')">
+                        <div class="cat-ico">🎓</div>
+                        <div><div class="cat-name">School/College</div><div class="cat-sub">Admission</div></div>
+                    </div>
+                    <div class="cat-card" onclick="selectCat('govt','Government Form')">
+                        <div class="cat-ico">🏛️</div>
+                        <div><div class="cat-name">Government</div><div class="cat-sub">Passport, Aadhar</div></div>
+                    </div>
+                    <div class="cat-card" onclick="selectCat('job','Job Application')">
+                        <div class="cat-ico">💼</div>
+                        <div><div class="cat-name">Job</div><div class="cat-sub">Application form</div></div>
+                    </div>
+                    <div class="cat-card" onclick="selectCat('other','Other Form')">
+                        <div class="cat-ico">📋</div>
+                        <div><div class="cat-name">Other</div><div class="cat-sub">Any form</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="goToFill()">Continue →</button>
+        </div>
+
+        <!-- Step 2: Fill Form -->
+        <div id="step2" style="display:none">
+            <div class="section">
+                <div class="progress-txt" id="progressTxt">Step 1 of 3</div>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:33%"></div></div>
+                <div class="sec-title" id="formCatTitle">Bank Account Form</div>
+
+                <!-- Auto-fill button -->
+                <div class="autofill-row">
+                    <button class="autofill-btn" onclick="autoFillAll()">⚡ Auto-Fill from Profile</button>
+                    <button class="autofill-btn" onclick="clearAll()">🗑️ Clear All</button>
+                </div>
+
+                <!-- Voice Box (shown when voice mode) -->
+                <div class="voice-box" id="voiceBox">
+                    <button class="v-mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+                    <div class="v-status" id="vStatus">Tap mic and speak!</div>
+                    <div class="v-sub" id="vSub">AI will fill the form for you</div>
+                    <div class="v-transcript" id="vTranscript"></div>
+                </div>
+
+                <!-- Form Fields -->
+                <div id="formFields">
+                    <div class="field-group">
+                        <label class="field-label">Full Name <span class="field-req">*</span></label>
+                        <input class="field-input" id="f_name" type="text" placeholder="As per Aadhar Card" oninput="validateField(this,'name')">
+                        <div class="field-hint" id="h_name"></div>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Mobile Number <span class="field-req">*</span></label>
+                        <input class="field-input" id="f_mobile" type="tel" placeholder="10 digit mobile" maxlength="10" oninput="validateField(this,'mobile')">
+                        <div class="field-hint" id="h_mobile"></div>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Date of Birth <span class="field-req">*</span></label>
+                        <input class="field-input" id="f_dob" type="date" oninput="validateField(this,'dob')">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Address <span class="field-req">*</span></label>
+                        <input class="field-input" id="f_address" type="text" placeholder="Full address with pincode">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Aadhar Number</label>
+                        <input class="field-input" id="f_aadhar" type="text" placeholder="12 digit Aadhar" maxlength="12" oninput="validateField(this,'aadhar')">
+                        <div class="field-hint" id="h_aadhar"></div>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">PAN Number</label>
+                        <input class="field-input" id="f_pan" type="text" placeholder="ABCDE1234F" maxlength="10" oninput="validateField(this,'pan')" style="text-transform:uppercase">
+                        <div class="field-hint" id="h_pan"></div>
+                    </div>
+                    <div class="field-group" id="bankFields">
+                        <label class="field-label">Account Type</label>
+                        <select class="field-select" id="f_acctype">
+                            <option value="">Select account type</option>
+                            <option value="savings">Savings Account</option>
+                            <option value="current">Current Account</option>
+                            <option value="jandhan">Jan Dhan Account</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Email</label>
+                        <input class="field-input" id="f_email" type="email" placeholder="your@email.com">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="submitForm()">✅ Submit Form</button>
+            <button class="btn-secondary" onclick="goBack()">← Back</button>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div class="success-screen" id="step3">
+            <span class="success-ico">🎉</span>
+            <div class="success-title">Form Submitted!</div>
+            <div class="success-sub">Your form has been filled and saved successfully!</div>
+            <div class="success-detail" id="successDetail"></div>
+            <button class="btn-primary" onclick="downloadForm()">⬇️ Download / Save as PDF</button>
+            <button class="btn-primary" onclick="window.location.href='home.html'" style="background:rgba(26,111,168,0.15);color:var(--blue-dark);box-shadow:none;">Back to Home</button>
+            <button class="btn-secondary" onclick="resetForm()">Fill Another Form</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toastEl"></div>
+    <script src="global-app.js"></script>
+    <script>
+        var selectedMode = 'voice';
+        var selectedCat = 'bank';
+        var selectedCatName = 'Bank Account Form';
+        var isListening = false;
+
+        function selectMode(mode) {
+            selectedMode = mode;
+            document.getElementById('modeVoice').classList.toggle('active', mode === 'voice');
+            document.getElementById('modeManual').classList.toggle('active', mode === 'manual');
+        }
+
+        function selectCat(cat, name) {
+            selectedCat = cat;
+            selectedCatName = name;
+            document.querySelectorAll('.cat-card').forEach(function(c) { c.classList.remove('active'); });
+            event.currentTarget.classList.add('active');
+        }
+
+        function goToFill() {
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+            document.getElementById('formCatTitle').textContent = selectedCatName;
+            document.getElementById('voiceBox').style.display = selectedMode === 'voice' ? 'block' : 'none';
+            // Show/hide bank fields
+            document.getElementById('bankFields').style.display = selectedCat === 'bank' ? 'block' : 'none';
+        }
+
+        function goBack() {
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step1').style.display = 'block';
+        }
+
+        function autoFillAll() {
+            var profile = JSON.parse(localStorage.getItem('fa_vault_self') || '{}');
+            if (!profile.name) { toast('⚠️ Save your profile first!'); return; }
+            var fields = {f_name:'name', f_mobile:'mobile', f_dob:'dob', f_address:'address', f_aadhar:'aadhar', f_pan:'pan', f_email:'email'};
+            var filled = 0;
+            Object.keys(fields).forEach(function(id) {
+                var el = document.getElementById(id);
+                var val = profile[fields[id]];
+                if (el && val) { el.value = val; el.classList.add('ok'); filled++; }
+            });
+            toast('⚡ ' + filled + ' fields auto-filled!');
+        }
+
+        function clearAll() {
+            ['f_name','f_mobile','f_dob','f_address','f_aadhar','f_pan','f_email'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) { el.value = ''; el.className = 'field-input'; }
+            });
+            toast('🗑️ Form cleared!');
+        }
+
+        function validateField(el, type) {
+            var v = el.value.trim();
+            var hintEl = document.getElementById('h_' + type.replace('f_',''));
+            if (!v) { el.className = 'field-input'; return; }
+            if (type === 'mobile') {
+                v = v.replace(/\D/g,''); el.value = v;
+                var ok = v.length === 10 && ['6','7','8','9'].includes(v[0]);
+                el.className = 'field-input ' + (ok ? 'ok' : 'err');
+                if (hintEl) hintEl.textContent = ok ? '' : 'Enter valid 10-digit mobile!';
+                if (hintEl) hintEl.className = 'field-hint' + (ok ? '' : ' err');
+            } else if (type === 'aadhar') {
+                v = v.replace(/\D/g,''); el.value = v;
+                var ok = v.length === 12 && !['0','1'].includes(v[0]);
+                el.className = 'field-input ' + (ok ? 'ok' : 'err');
+                if (hintEl) hintEl.textContent = ok ? '' : 'Enter valid 12-digit Aadhar!';
+                if (hintEl) hintEl.className = 'field-hint' + (ok ? '' : ' err');
+            } else if (type === 'pan') {
+                el.value = v.toUpperCase();
+                var ok = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v.toUpperCase());
+                el.className = 'field-input ' + (ok ? 'ok' : 'err');
+                if (hintEl) hintEl.textContent = ok ? '' : 'Format: ABCDE1234F';
+                if (hintEl) hintEl.className = 'field-hint' + (ok ? '' : ' err');
+            } else if (type === 'name') {
+                var ok = !(/\d/.test(v)) && v.length >= 3;
+                el.className = 'field-input ' + (ok ? 'ok' : 'err');
+                if (hintEl) hintEl.textContent = ok ? '' : 'Name cannot have numbers!';
+                if (hintEl) hintEl.className = 'field-hint' + (ok ? '' : ' err');
+            } else {
+                el.className = 'field-input ok';
+            }
+        }
+
+        function toggleMic() {
+            isListening = !isListening;
+            var btn = document.getElementById('micBtn');
+            var status = document.getElementById('vStatus');
+            var sub = document.getElementById('vSub');
+            var box = document.getElementById('voiceBox');
+            var transcript = document.getElementById('vTranscript');
+            if (isListening) {
+                btn.classList.add('listening'); btn.textContent = '⏹';
+                box.classList.add('listening');
+                status.textContent = '🎤 Listening...';
+                sub.textContent = 'Speak your details clearly';
+                toast('🎤 Listening... speak now!');
+                setTimeout(function() {
+                    if (isListening) {
+                        var sample = 'My name is Abhay Vishwakarma, mobile 9876543210, address Vashi Navi Mumbai';
+                        transcript.textContent = '"' + sample + '"';
+                        transcript.classList.add('show');
+                        autoFillFromVoice(sample);
+                        stopMic();
+                    }
+                }, 2500);
+            } else {
+                stopMic();
+            }
+        }
+
+        function stopMic() {
+            isListening = false;
+            var btn = document.getElementById('micBtn');
+            var box = document.getElementById('voiceBox');
+            if (btn) { btn.classList.remove('listening'); btn.textContent = '🎤'; }
+            if (box) box.classList.remove('listening');
+            document.getElementById('vStatus').textContent = 'Tap mic and speak!';
+            document.getElementById('vSub').textContent = 'AI will fill the form for you';
+        }
+
+        function autoFillFromVoice(text) {
+            toast('⚡ AI filling form from voice...');
+            // Simple demo fill
+            if (text.includes('Abhay')) document.getElementById('f_name').value = 'Abhay Vishwakarma';
+            if (text.includes('9876543210')) document.getElementById('f_mobile').value = '9876543210';
+            if (text.includes('Vashi')) document.getElementById('f_address').value = 'Vashi, Navi Mumbai, Maharashtra';
+            ['f_name','f_mobile','f_address'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el && el.value) el.classList.add('ok');
+            });
+        }
+
+        function submitForm() {
+            var name = document.getElementById('f_name').value.trim();
+            var mobile = document.getElementById('f_mobile').value.trim();
+            if (!name || !mobile) { toast('⚠️ Please fill Name and Mobile!'); return; }
+            // Save to history
+            var history = JSON.parse(localStorage.getItem('fa_form_history') || '[]');
+            history.unshift({ type: selectedCatName, name: name, mobile: mobile, date: new Date().toLocaleDateString(), status: 'Done' });
+            localStorage.setItem('fa_form_history', JSON.stringify(history));
+            // Show success
+            document.getElementById('step2').style.display = 'none';
+            var detail = '<div class="sd-row"><span class="sd-key">Form Type</span><span class="sd-val">' + selectedCatName + '</span></div>' +
+                '<div class="sd-row"><span class="sd-key">Name</span><span class="sd-val">' + name + '</span></div>' +
+                '<div class="sd-row"><span class="sd-key">Mobile</span><span class="sd-val">' + mobile + '</span></div>' +
+                '<div class="sd-row"><span class="sd-key">Date</span><span class="sd-val">' + new Date().toLocaleDateString() + '</span></div>';
+            document.getElementById('successDetail').innerHTML = detail;
+            document.getElementById('step3').classList.add('show');
+            toast('✅ Form submitted successfully!');
+        }
+
+        function resetForm() {
+            document.getElementById('step3').classList.remove('show');
+            document.getElementById('step1').style.display = 'block';
+            clearAll();
+        }
+
+        function downloadForm() {
+            var name = document.getElementById('f_name').value || 'Form';
+            var oldTitle = document.title;
+            document.title = name + '_' + selectedCatName + '_FormAssist';
+            toast('📄 Opening print dialog — Save as PDF!');
+            setTimeout(function(){
+                window.print();
+                document.title = oldTitle;
+            }, 300);
+        }
+
+        var tt;
+        function toast(msg) { var el = document.getElementById('toastEl'); el.textContent = msg; el.classList.add('on'); clearTimeout(tt); tt = setTimeout(function() { el.classList.remove('on'); }, 2500); }
+    </script>
+</body>
+</html>

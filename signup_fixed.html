@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormAssist - Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root{--white:#FFFFFF;--bg:#F4F7FB;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--amber:#F59E0B;--blue2:#ADD8E6;--shadow:0 4px 24px rgba(26,111,168,0.12);}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;}
+        .card{background:var(--white);border-radius:28px;padding:32px 24px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(26,35,64,0.10);}
+        .logo-wrap{text-align:center;margin-bottom:20px;}
+        .logo-ico{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px;}
+        .logo-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--navy);}
+        .logo-name span{color:var(--blue-dark);}
+        .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:22px;}
+        .step-dot{width:30px;height:30px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub);transition:all 0.3s;flex-shrink:0;}
+        .step-dot.active{background:var(--blue-dark);color:white;}
+        .step-dot.done{background:var(--mint);color:white;}
+        .step-line{width:36px;height:2px;background:var(--border);transition:all 0.3s;}
+        .step-line.done{background:var(--mint);}
+        .screen{display:none;}
+        .screen.active{display:block;}
+        .step-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+        .step-sub{font-size:12px;color:var(--sub);margin-bottom:18px;line-height:1.5;}
+        .field-group{margin-bottom:13px;}
+        .field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--sub);margin-bottom:6px;display:block;}
+        .field-wrap{position:relative;}
+        .field-input{width:100%;padding:13px 15px;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;}
+        .field-input:focus{border-color:var(--blue-dark);background:var(--white);box-shadow:0 0 0 3px rgba(26,111,168,0.1);}
+        .field-input::placeholder{color:#B8C5D6;}
+        .field-input.ok{border-color:var(--mint);}
+        .field-input.err{border-color:var(--coral);}
+        .eye-btn{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:17px;cursor:pointer;opacity:0.5;}
+        .otp-wrap{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
+        .otp-box{width:44px;height:52px;border-radius:13px;border:1.5px solid var(--border);background:var(--bg);text-align:center;font-size:20px;font-weight:700;color:var(--navy);outline:none;font-family:'Syne',sans-serif;transition:all 0.3s;}
+        .otp-box:focus{border-color:var(--blue-dark);background:var(--white);}
+        .otp-box.filled{border-color:var(--blue-dark);background:var(--white);}
+        .strength-wrap{margin-top:6px;}
+        .strength-bar{height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:3px;}
+        .strength-fill{height:100%;border-radius:2px;transition:all 0.4s;width:0%;}
+        .strength-txt{font-size:11px;font-weight:600;}
+        .char-count{font-size:11px;color:var(--sub);text-align:right;margin-top:3px;}
+        .btn-main{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;margin-top:4px;}
+        .btn-main:hover{transform:translateY(-2px);}
+        .btn-main:disabled{opacity:0.7;cursor:not-allowed;transform:none;}
+        .btn-back{width:100%;padding:12px;background:transparent;border:1.5px solid var(--border);border-radius:13px;color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:8px;font-family:'DM Sans',sans-serif;}
+        .btn-back:hover{border-color:var(--blue2);color:var(--text);}
+        .divider{display:flex;align-items:center;gap:10px;margin:14px 0;}
+        .div-line{flex:1;height:1px;background:var(--border);}
+        .div-txt{font-size:11px;color:var(--sub);}
+        .btn-google{width:100%;padding:12px;background:var(--white);border:1.5px solid var(--border);border-radius:13px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'DM Sans',sans-serif;}
+        .btn-google:hover{border-color:var(--blue2);box-shadow:var(--shadow);}
+        .login-row{text-align:center;margin-top:18px;font-size:13px;color:var(--sub);}
+        .link{color:var(--blue-dark);font-weight:700;cursor:pointer;}
+        .success-wrap{text-align:center;padding:16px 0;}
+        .success-ico{font-size:60px;display:block;margin-bottom:14px;animation:pop 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+        @keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+        .success-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+        .success-sub{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:22px;}
+        .error-box{background:#FEF2F2;border:1.5px solid #FECACA;border-radius:11px;padding:9px 13px;font-size:12px;color:var(--coral);margin-bottom:11px;display:none;align-items:center;gap:7px;}
+        .error-box.show{display:flex;}
+        .info-box{background:#EFF8FF;border:1.5px solid var(--blue2);border-radius:11px;padding:9px 13px;font-size:11px;color:var(--blue-dark);margin-bottom:12px;line-height:1.6;}
+        .demo-otp-box{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:11px;padding:9px 13px;font-size:12px;color:var(--amber);margin-bottom:12px;text-align:center;}
+        .demo-banner{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:8px 12px;font-size:11px;color:#92400E;text-align:center;margin-bottom:12px;display:none;}
+        .demo-banner.show{display:block;}
+        .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:12px;padding:11px 20px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;}
+        .toast.on{transform:translateX(-50%) translateY(0);}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo-wrap">
+            <div class="logo-ico">📋</div>
+            <div class="logo-name">Form<span>Assist</span></div>
+        </div>
+
+        <div class="steps">
+            <div class="step-dot active" id="sd1">1</div>
+            <div class="step-line" id="sl1"></div>
+            <div class="step-dot" id="sd2">2</div>
+            <div class="step-line" id="sl2"></div>
+            <div class="step-dot" id="sd3">3</div>
+            <div class="step-line" id="sl3"></div>
+            <div class="step-dot" id="sd4">4</div>
+        </div>
+
+        <!-- Step 1: Mobile -->
+        <div class="screen active" id="step1">
+            <div class="step-title">Create Account</div>
+            <div class="step-sub">Enter your mobile number to get started</div>
+            <div class="demo-banner" id="demoBanner1">⚠️ Demo Mode — Backend offline</div>
+            <div class="error-box" id="err1"><span>⚠️</span><span id="errTxt1">Error</span></div>
+            <div class="field-group">
+                <label class="field-label">Mobile Number</label>
+                <input class="field-input" id="mobile" type="tel" placeholder="Enter 10 digit number" maxlength="10" oninput="validateMobile(this)">
+            </div>
+            <button class="btn-main" id="otpBtn" onclick="sendOTP()">Send OTP →</button>
+            <div class="divider"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
+            <button class="btn-google" onclick="googleSignup()">
+                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Sign up with Google
+            </button>
+            <div class="login-row">Already have an account? <span class="link" onclick="window.location.href='index.html'">Login</span></div>
+        </div>
+
+        <!-- Step 2: OTP -->
+        <div class="screen" id="step2">
+            <div class="step-title">Verify OTP</div>
+            <div class="step-sub" id="otpSub">Enter 6-digit OTP sent to your mobile</div>
+            <div class="demo-otp-box" id="demoOtpBox" style="display:none">📱 Demo OTP: <strong id="demoOtp">------</strong></div>
+            <div class="error-box" id="err2"><span>⚠️</span><span id="errTxt2">Invalid OTP!</span></div>
+            <div class="otp-wrap">
+                <input class="otp-box" id="o1" maxlength="1" oninput="otpMove(this,'o2')" onkeydown="otpBack(event,this,'')">
+                <input class="otp-box" id="o2" maxlength="1" oninput="otpMove(this,'o3')" onkeydown="otpBack(event,this,'o1')">
+                <input class="otp-box" id="o3" maxlength="1" oninput="otpMove(this,'o4')" onkeydown="otpBack(event,this,'o2')">
+                <input class="otp-box" id="o4" maxlength="1" oninput="otpMove(this,'o5')" onkeydown="otpBack(event,this,'o3')">
+                <input class="otp-box" id="o5" maxlength="1" oninput="otpMove(this,'o6')" onkeydown="otpBack(event,this,'o4')">
+                <input class="otp-box" id="o6" maxlength="1" oninput="otpMove(this,'')" onkeydown="otpBack(event,this,'o5')">
+            </div>
+            <button class="btn-main" id="verifyBtn" onclick="verifyOTP()">Verify OTP →</button>
+            <button class="btn-back" onclick="goStep(1)">← Back</button>
+        </div>
+
+        <!-- Step 3: Username + Password -->
+        <div class="screen" id="step3">
+            <div class="step-title">Set Credentials</div>
+            <div class="step-sub">Choose a unique username and strong password</div>
+            <div class="error-box" id="err3"><span>⚠️</span><span id="errTxt3">Error</span></div>
+            <div class="field-group">
+                <label class="field-label">Username</label>
+                <input class="field-input" id="uname" type="text" placeholder="Choose a unique username" oninput="checkUsername(this)">
+            </div>
+            <div class="field-group">
+                <label class="field-label">Password</label>
+                <div class="field-wrap">
+                    <input class="field-input" id="upass" type="password" placeholder="Min 6 characters" oninput="checkPassword(this)" style="padding-right:42px">
+                    <span class="eye-btn" onclick="toggleP('upass')">👁️</span>
+                </div>
+                <div class="strength-wrap">
+                    <div class="strength-bar"><div class="strength-fill" id="strFill"></div></div>
+                    <div class="strength-txt" id="strTxt" style="color:#B8C5D6">Enter password</div>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label">Confirm Password</label>
+                <div class="field-wrap">
+                    <input class="field-input" id="upass2" type="password" placeholder="Re-enter password" oninput="checkConfirm(this)" style="padding-right:42px">
+                    <span class="eye-btn" onclick="toggleP('upass2')">👁️</span>
+                </div>
+            </div>
+            <button class="btn-main" onclick="goStep3()">Continue →</button>
+            <button class="btn-back" onclick="goStep(2)">← Back</button>
+        </div>
+
+        <!-- Step 4: Secret Phrase -->
+        <div class="screen" id="step4">
+            <div class="step-title">Security Phrase</div>
+            <div class="step-sub">This phrase helps recover your account. Keep it safe!</div>
+            <div class="error-box" id="err4"><span>⚠️</span><span id="errTxt4">Error</span></div>
+            <div class="field-group">
+                <label class="field-label">Secret Phrase (min 10 characters)</label>
+                <input class="field-input" id="phrase" type="text" placeholder="e.g. My cat loves blue sky" maxlength="100" oninput="checkPhrase(this)">
+                <div class="char-count"><span id="phraseCount">0</span>/100</div>
+            </div>
+            <div class="info-box">🔒 Encrypted and stored securely. Never shared with anyone.</div>
+            <button class="btn-main" id="createBtn" onclick="createAccount()">Create Account →</button>
+            <button class="btn-back" onclick="goStep(3)">← Back</button>
+        </div>
+
+        <!-- Step 5: Success -->
+        <div class="screen" id="step5">
+            <div class="success-wrap">
+                <span class="success-ico">🎉</span>
+                <div class="success-title">Account Created!</div>
+                <div class="success-sub">Welcome to FormAssist! Your account is ready.</div>
+                <button class="btn-main" onclick="window.location.href='home.html'">Go to Home →</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toastEl"></div>
+    <script>
+        // =============================================
+        // API CONFIG — Replit URL yahan daalo
+        // =============================================
+        var API_BASE = 'http://localhost:8000';
+        var DEMO_MODE = false; // Backend offline hone par auto true hoga
+        var generatedOTP = '';
+        var mobileNum = '';
+
+        function goStep(n){
+            document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+            document.getElementById('step'+n).classList.add('active');
+            updateSteps(n);
+        }
+
+        function updateSteps(n){
+            for(var i=1;i<=4;i++){
+                var dot=document.getElementById('sd'+i);
+                var line=document.getElementById('sl'+i);
+                if(i<n){dot.className='step-dot done';dot.textContent='✓';}
+                else if(i===n){dot.className='step-dot active';dot.textContent=i;}
+                else{dot.className='step-dot';dot.textContent=i;}
+                if(line){line.className=i<n?'step-line done':'step-line';}
+            }
+        }
+
+        function showErr(id, msg){ 
+            document.getElementById('errTxt'+id).textContent=msg;
+            document.getElementById('err'+id).classList.add('show'); 
+        }
+        function hideErr(id){ document.getElementById('err'+id).classList.remove('show'); }
+
+        function validateMobile(el){
+            var v=el.value.replace(/\D/g,'');
+            el.value=v;
+            el.className='field-input'+(v.length===10&&['6','7','8','9'].includes(v[0])?' ok':v.length>0?' err':'');
+        }
+
+        async function sendOTP(){
+            var m = document.getElementById('mobile').value.trim();
+            hideErr(1);
+            if(m.length!==10||!['6','7','8','9'].includes(m[0])){
+                showErr(1,'Please enter a valid 10-digit mobile number!');
+                return;
+            }
+            mobileNum = m;
+            var btn = document.getElementById('otpBtn');
+            btn.disabled=true; btn.textContent='Sending...';
+
+            try {
+                var res = await fetch(API_BASE + '/auth/send-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({mobile: m}),
+                    signal: AbortSignal.timeout(5000)
+                });
+                var data = await res.json();
+
+                if(!res.ok){
+                    showErr(1, data.detail || 'Failed to send OTP!');
+                    btn.disabled=false; btn.textContent='Send OTP →';
+                    return;
+                }
+
+                // Real mode — show demo OTP only if backend sends it
+                if(data.demo_otp){
+                    generatedOTP = data.demo_otp;
+                    document.getElementById('demoOtpBox').style.display='block';
+                    document.getElementById('demoOtp').textContent = data.demo_otp;
+                }
+                DEMO_MODE = false;
+
+            } catch(e){
+                // Backend offline — Demo mode
+                DEMO_MODE = true;
+                generatedOTP = String(Math.floor(100000+Math.random()*900000));
+                document.getElementById('demoOtpBox').style.display='block';
+                document.getElementById('demoOtp').textContent = generatedOTP;
+                document.getElementById('demoBanner1').classList.add('show');
+            }
+
+            document.getElementById('otpSub').textContent='OTP sent to +91 '+m;
+            t('📱 OTP sent!');
+            btn.disabled=false; btn.textContent='Send OTP →';
+            goStep(2);
+        }
+
+        function otpMove(el,nextId){
+            if(el.value&&nextId) document.getElementById(nextId).focus();
+            el.classList.toggle('filled',el.value.length>0);
+        }
+        function otpBack(e,el,prevId){
+            if(e.key==='Backspace'&&!el.value&&prevId) document.getElementById(prevId).focus();
+        }
+
+        async function verifyOTP(){
+            var entered = ['o1','o2','o3','o4','o5','o6'].map(function(id){return document.getElementById(id).value;}).join('');
+            hideErr(2);
+
+            if(entered.length<6){
+                showErr(2,'Please enter all 6 digits!');
+                return;
+            }
+
+            var btn = document.getElementById('verifyBtn');
+            btn.disabled=true; btn.textContent='Verifying...';
+
+            if(DEMO_MODE){
+                // Demo mode — local OTP check
+                if(entered !== generatedOTP){
+                    showErr(2,'Invalid OTP! Try again.');
+                    btn.disabled=false; btn.textContent='Verify OTP →';
+                    return;
+                }
+            } else {
+                try {
+                    var res = await fetch(API_BASE + '/auth/verify-otp', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({mobile: mobileNum, otp: entered}),
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    var data = await res.json();
+
+                    // FIX: Explicitly check success
+                    if(!res.ok || !data.success){
+                        showErr(2, data.detail || 'Invalid OTP! Try again.');
+                        btn.disabled=false; btn.textContent='Verify OTP →';
+                        return;
+                    }
+                } catch(e){
+                    showErr(2,'Network error! Check connection.');
+                    btn.disabled=false; btn.textContent='Verify OTP →';
+                    return;
+                }
+            }
+
+            btn.disabled=false; btn.textContent='Verify OTP →';
+            t('✅ Mobile verified!');
+            goStep(3);
+        }
+
+        function checkUsername(el){
+            var v=el.value.trim();
+            el.className='field-input'+(v.length>=3?' ok':v.length>0?' err':'');
+        }
+
+        function checkPassword(el){
+            var v=el.value;
+            var fill=document.getElementById('strFill');
+            var txt=document.getElementById('strTxt');
+            var score=0;
+            if(v.length>=6)score++;if(v.length>=10)score++;
+            if(/[A-Z]/.test(v))score++;if(/[0-9]/.test(v))score++;if(/[^A-Za-z0-9]/.test(v))score++;
+            var colors=['#EF4444','#F59E0B','#F59E0B','#10B981','#10B981'];
+            var labels=['Too weak','Weak','Fair','Strong','Very Strong'];
+            fill.style.width=(score*20)+'%';
+            fill.style.background=v.length?colors[Math.max(0,score-1)]:'#E2EAF4';
+            txt.textContent=v.length?labels[Math.max(0,score-1)]:'Enter password';
+            txt.style.color=v.length?colors[Math.max(0,score-1)]:'#B8C5D6';
+            el.className='field-input'+(v.length>=6?' ok':v.length>0?' err':'');
+        }
+
+        function checkConfirm(el){
+            var p=document.getElementById('upass').value;
+            el.className='field-input'+(el.value===p&&el.value?' ok':el.value?' err':'');
+        }
+
+        function checkPhrase(el){
+            var v=el.value;
+            document.getElementById('phraseCount').textContent=v.length;
+            el.className='field-input'+(v.length>=10?' ok':v.length>0?' err':'');
+        }
+
+        function goStep3(){
+            var u=document.getElementById('uname').value.trim();
+            var p=document.getElementById('upass').value;
+            var p2=document.getElementById('upass2').value;
+            hideErr(3);
+            if(u.length<3){showErr(3,'Username must be at least 3 characters!');return;}
+            if(u===p){showErr(3,'Username and password cannot be same!');return;}
+            if(p.length<6){showErr(3,'Password must be at least 6 characters!');return;}
+            if(p!==p2){showErr(3,'Passwords do not match!');return;}
+            goStep(4);
+        }
+
+        async function createAccount(){
+            var ph=document.getElementById('phrase').value.trim();
+            hideErr(4);
+            if(ph.length<10){showErr(4,'Secret phrase must be at least 10 characters!');return;}
+
+            var btn=document.getElementById('createBtn');
+            btn.disabled=true; btn.textContent='Creating...';
+
+            if(DEMO_MODE){
+                // Demo mode — save locally
+                localStorage.setItem('fa_token','demo_token_'+Date.now());
+                localStorage.setItem('fa_username', document.getElementById('uname').value.trim());
+                btn.disabled=false; btn.textContent='Create Account →';
+                t('🎉 Account created! (Demo Mode)');
+                goStep(5);
+                return;
+            }
+
+            try {
+                var res = await fetch(API_BASE + '/auth/signup', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        mobile: mobileNum,
+                        username: document.getElementById('uname').value.trim(),
+                        password: document.getElementById('upass').value,
+                        // FIX: Backend field name match — secret_phrase
+                        secret_phrase: ph
+                    }),
+                    signal: AbortSignal.timeout(8000)
+                });
+                var data = await res.json();
+
+                // FIX: Explicitly check res.ok AND data.success
+                if(!res.ok || !data.success){
+                    showErr(4, data.detail || 'Account creation failed! Try again.');
+                    btn.disabled=false; btn.textContent='Create Account →';
+                    return;
+                }
+
+                // Success — save token
+                localStorage.setItem('fa_token', data.token);
+                localStorage.setItem('fa_username', data.username);
+                t('🎉 Account created successfully!');
+                goStep(5); // Only go to step 5 on real success
+
+            } catch(e){
+                showErr(4,'Network error! Please try again.');
+                btn.disabled=false; btn.textContent='Create Account →';
+            }
+
+            btn.disabled=false; btn.textContent='Create Account →';
+        }
+
+        function googleSignup(){
+            t('🔄 Signing up with Google...');
+            localStorage.setItem('fa_token','google_token_'+Date.now());
+            localStorage.setItem('fa_username','Google User');
+            setTimeout(function(){window.location.href='home.html';},1200);
+        }
+
+        function toggleP(id){
+            var el=document.getElementById(id);
+            el.type=el.type==='password'?'text':'password';
+        }
+
+        var tt;
+        function toast(msg){return t(msg);}
+        function t(msg){var el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('on');},2500);}
+    </script>
+</body>
+</html>

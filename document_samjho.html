@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormAssist - Document Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--white:#FFFFFF;--bg:#F4F7FB;--blue:#87CEEB;--blue2:#ADD8E6;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--amber:#F59E0B;--shadow:0 4px 24px rgba(26,111,168,0.10);--shadow2:0 8px 32px rgba(26,111,168,0.18);}
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;padding-bottom:40px;}
+        .topbar{position:fixed;top:0;left:0;right:0;height:58px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;box-shadow:0 1px 8px rgba(26,35,64,0.05);}
+        .t-back{width:38px;height:38px;border-radius:11px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+        .t-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);}
+        .t-title span{color:var(--blue-dark);}
+        .page{padding:70px 16px 20px;}
+        .hero-card{background:linear-gradient(135deg,var(--blue-dark),var(--navy2));border-radius:22px;padding:24px;text-align:center;margin-bottom:16px;color:white;}
+        .hero-ico{font-size:48px;display:block;margin-bottom:12px;animation:float 3s ease-in-out infinite;}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        .hero-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;}
+        .hero-sub{font-size:13px;opacity:0.8;line-height:1.6;}
+        .section{background:var(--white);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(26,35,64,0.05);}
+        .sec-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
+        .upload-box{border:2.5px dashed var(--blue2);border-radius:18px;padding:32px 16px;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);margin-bottom:12px;}
+        .upload-box:hover{border-color:var(--blue-dark);background:#EFF8FF;}
+        .upload-box.has-file{border-color:var(--mint);background:#ECFDF5;}
+        .upload-ico{font-size:48px;display:block;margin-bottom:12px;}
+        .upload-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--navy);margin-bottom:5px;}
+        .upload-sub{font-size:12px;color:var(--sub);}
+        .upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+        .upload-opt{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;transition:all 0.2s;}
+        .upload-opt:hover{border-color:var(--blue-dark);background:#EFF8FF;}
+        .upload-opt-ico{font-size:28px;display:block;margin-bottom:7px;}
+        .upload-opt-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--navy);}
+        .upload-opt-sub{font-size:11px;color:var(--sub);margin-top:2px;}
+        .preview-wrap{display:none;margin-bottom:12px;text-align:center;}
+        .preview-wrap.show{display:block;}
+        .preview-img{max-width:100%;max-height:200px;border-radius:14px;border:2px solid var(--blue2);object-fit:cover;}
+        .preview-name{font-size:12px;color:var(--sub);margin-top:6px;}
+        .analyzing-box{text-align:center;padding:28px;background:var(--white);border-radius:18px;margin-bottom:12px;display:none;}
+        .analyzing-box.show{display:block;}
+        .a-spin{width:64px;height:64px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--blue-dark);animation:spin 1s linear infinite;margin:0 auto 14px;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .a-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+        .a-sub{font-size:13px;color:var(--sub);}
+        .result-card{background:var(--white);border-radius:18px;padding:16px;margin-bottom:12px;display:none;box-shadow:0 1px 6px rgba(26,35,64,0.05);}
+        .result-card.show{display:block;}
+        .result-header{display:flex;align-items:center;gap:12px;padding:14px;background:linear-gradient(135deg,rgba(26,111,168,0.08),rgba(44,62,107,0.05));border-radius:14px;margin-bottom:14px;}
+        .result-doc-ico{font-size:36px;}
+        .result-doc-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--navy);margin-bottom:3px;}
+        .result-doc-conf{font-size:12px;color:var(--mint);font-weight:600;}
+        .info-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+        .info-row:last-child{border-bottom:none;}
+        .info-ico{font-size:18px;flex-shrink:0;margin-top:1px;}
+        .info-key{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;}
+        .info-val{font-size:13px;color:var(--text);font-weight:500;line-height:1.5;}
+        .req-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+        .req-item{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--text);}
+        .req-dot{width:7px;height:7px;border-radius:50%;background:var(--blue-dark);flex-shrink:0;}
+        .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,111,168,0.35);}
+        .btn-secondary{width:100%;padding:13px;background:var(--white);border:1.5px solid var(--border);border-radius:14px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px;}
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:12px;padding:11px 20px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;}
+        .toast.on{transform:translateX(-50%) translateY(0);}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="t-back" onclick="window.location.href='home.html'">←</div>
+        <div class="t-title">Document <span>Analysis</span></div>
+        <div style="width:38px"></div>
+    </div>
+    <div class="page">
+        <div class="hero-card">
+            <span class="hero-ico">📷</span>
+            <div class="hero-title">Document Analysis</div>
+            <div class="hero-sub">Photo lo ya upload karo — AI sab samjha dega!</div>
+        </div>
+        <div class="section">
+            <div class="sec-title">Upload Document</div>
+            <div class="upload-grid">
+                <div class="upload-opt" onclick="document.getElementById('camInput').click()">
+                    <span class="upload-opt-ico">📸</span>
+                    <div class="upload-opt-name">Camera</div>
+                    <div class="upload-opt-sub">Live photo lo</div>
+                </div>
+                <div class="upload-opt" onclick="document.getElementById('galleryInput').click()">
+                    <span class="upload-opt-ico">🖼️</span>
+                    <div class="upload-opt-name">Gallery</div>
+                    <div class="upload-opt-sub">Photo upload karo</div>
+                </div>
+            </div>
+            <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
+            <input type="file" id="galleryInput" accept="image/*,application/pdf" style="display:none" onchange="handleFile(this)">
+            <div class="preview-wrap" id="previewWrap">
+                <img class="preview-img" id="previewImg" src="">
+                <div class="preview-name" id="previewName"></div>
+            </div>
+        </div>
+        <div class="analyzing-box" id="analyzingBox">
+            <div class="a-spin"></div>
+            <div class="a-title">AI Analyze kar raha hai...</div>
+            <div class="a-sub">Document identify ho raha hai</div>
+        </div>
+        <div class="result-card" id="resultCard">
+            <div class="result-header">
+                <div class="result-doc-ico" id="r_ico">📋</div>
+                <div>
+                    <div class="result-doc-name" id="r_name">Document Detected</div>
+                    <div class="result-doc-conf">✅ AI Confidence: High</div>
+                </div>
+            </div>
+            <div class="sec-title">Document Information</div>
+            <div id="r_info"></div>
+            <div class="sec-title" style="margin-top:14px;">Required Documents</div>
+            <div class="req-list" id="r_reqs"></div>
+        </div>
+        <div id="resultActions" style="display:none">
+            <button class="btn-primary" onclick="window.location.href='smart_search.html'">⚡ Auto-Fill Form →</button>
+            <button class="btn-secondary" onclick="resetAnalysis()">📷 Scan Another Document</button>
+        </div>
+    </div>
+    <div class="toast" id="toastEl"></div>
+    <script src="global-app.js"></script>
+    <script>
+        var docTypes = {
+            passport:{ico:'📘',name:'Passport Application Form',info:[{ico:'👤',key:'Type',val:'Travel Document - Government of India'},{ico:'📅',key:'Validity',val:'10 years for adults, 5 years for minors'},{ico:'💰',key:'Fee',val:'Normal: ₹1500 | Tatkal: ₹3500'}],reqs:['Aadhar Card (Original + Photocopy)','PAN Card','Address Proof (Utility Bill)','Date of Birth Certificate','Passport size photos (white background)','10th Marksheet']},
+            aadhar:{ico:'🪪',name:'Aadhar Card',info:[{ico:'🔢',key:'Type',val:'Unique Identification Document - UIDAI'},{ico:'📍',key:'Contains',val:'12-digit UID, Name, DOB, Address, Photo'},{ico:'✅',key:'Status',val:'Valid ID & Address Proof'}],reqs:['Birth Certificate or School Certificate','Address Proof','Mobile Number for OTP','Passport size photo']},
+            pan:{ico:'💳',name:'PAN Card',info:[{ico:'🔢',key:'Type',val:'Permanent Account Number - Income Tax Dept'},{ico:'📋',key:'Format',val:'ABCDE1234F (5 letters + 4 digits + 1 letter)'},{ico:'✅',key:'Use',val:'Tax filing, Bank account, Large transactions'}],reqs:['Aadhar Card','Date of Birth proof','Address proof','Passport size photo']},
+            kisan:{ico:'🌾',name:'PM Kisan Registration Form',info:[{ico:'🏛️',key:'Scheme',val:'PM Kisan Samman Nidhi Yojana'},{ico:'💰',key:'Benefit',val:'₹6,000 per year in 3 installments'},{ico:'👥',key:'Eligible',val:'Small & marginal farmers with land'}],reqs:['Land ownership documents','Aadhar Card','Bank passbook (with IFSC)','Mobile number linked to Aadhar']},
+            default:{ico:'📋',name:'Government Document',info:[{ico:'📋',key:'Type',val:'Official Government Document'},{ico:'✅',key:'Status',val:'Valid document identified'},{ico:'💡',key:'Tip',val:'Keep original + 2 photocopies'}],reqs:['Aadhar Card','PAN Card (if applicable)','Passport size photo','Address proof']}
+        };
+
+        function handleFile(input) {
+            if (!input.files || !input.files[0]) return;
+            var file = input.files[0];
+            if (file.type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('previewImg').style.display = 'block';
+                    document.getElementById('previewWrap').classList.add('show');
+                    document.getElementById('previewName').textContent = file.name;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('previewWrap').classList.add('show');
+                document.getElementById('previewImg').style.display = 'none';
+                document.getElementById('previewName').textContent = '📄 ' + file.name;
+            }
+            analyzeDoc(file.name);
+        }
+
+        function analyzeDoc(filename) {
+            document.getElementById('analyzingBox').classList.add('show');
+            document.getElementById('resultCard').classList.remove('show');
+            document.getElementById('resultActions').style.display = 'none';
+            toast('🤖 AI analyzing document...');
+            setTimeout(function() {
+                document.getElementById('analyzingBox').classList.remove('show');
+                var fname = filename.toLowerCase();
+                var type = 'default';
+                if (fname.includes('passport')) type = 'passport';
+                else if (fname.includes('aadhar') || fname.includes('aadhaar')) type = 'aadhar';
+                else if (fname.includes('pan')) type = 'pan';
+                else if (fname.includes('kisan')) type = 'kisan';
+                showResult(type);
+            }, 2000);
+        }
+
+        function showResult(type) {
+            var doc = docTypes[type];
+            document.getElementById('r_ico').textContent = doc.ico;
+            document.getElementById('r_name').textContent = doc.name;
+            var infoHtml = doc.info.map(function(i) {
+                return '<div class="info-row"><span class="info-ico">' + i.ico + '</span><div><div class="info-key">' + i.key + '</div><div class="info-val">' + i.val + '</div></div></div>';
+            }).join('');
+            document.getElementById('r_info').innerHTML = infoHtml;
+            var reqsHtml = doc.reqs.map(function(r) {
+                return '<div class="req-item"><div class="req-dot"></div>' + r + '</div>';
+            }).join('');
+            document.getElementById('r_reqs').innerHTML = reqsHtml;
+            document.getElementById('resultCard').classList.add('show');
+            document.getElementById('resultActions').style.display = 'block';
+            toast('✅ ' + doc.name + ' identified!');
+        }
+
+        function resetAnalysis() {
+            document.getElementById('previewWrap').classList.remove('show');
+            document.getElementById('resultCard').classList.remove('show');
+            document.getElementById('resultActions').style.display = 'none';
+            document.getElementById('camInput').value = '';
+            document.getElementById('galleryInput').value = '';
+        }
+
+        var tt;
+        function toast(msg) { var el = document.getElementById('toastEl'); el.textContent = msg; el.classList.add('on'); clearTimeout(tt); tt = setTimeout(function() { el.classList.remove('on'); }, 2500); }
+    </script>
+</body>
+</html>

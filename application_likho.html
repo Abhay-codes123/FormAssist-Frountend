@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormAssist - Letter Writer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--white:#FFFFFF;--bg:#F4F7FB;--blue:#87CEEB;--blue2:#ADD8E6;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--amber:#F59E0B;--shadow:0 4px 24px rgba(26,111,168,0.10);--shadow2:0 8px 32px rgba(26,111,168,0.18);}
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;padding-bottom:40px;}
+        .topbar{position:fixed;top:0;left:0;right:0;height:58px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;box-shadow:0 1px 8px rgba(26,35,64,0.05);}
+        .t-back{width:38px;height:38px;border-radius:11px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+        .t-back:hover{background:var(--blue2);}
+        .t-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);}
+        .t-title span{color:var(--blue-dark);}
+        .page{padding:70px 16px 20px;}
+        .hero-card{background:linear-gradient(135deg,var(--blue-dark),var(--navy2));border-radius:22px;padding:24px;text-align:center;margin-bottom:16px;color:white;}
+        .hero-ico{font-size:48px;display:block;margin-bottom:12px;animation:float 3s ease-in-out infinite;}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        .hero-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;}
+        .hero-sub{font-size:13px;opacity:0.8;line-height:1.6;}
+        .section{background:var(--white);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(26,35,64,0.05);}
+        .sec-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
+        .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+        .type-card{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;cursor:pointer;transition:all 0.2s;}
+        .type-card:hover,.type-card.active{border-color:var(--blue-dark);background:#EFF8FF;}
+        .type-ico{font-size:28px;display:block;margin-bottom:7px;}
+        .type-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px;}
+        .type-sub{font-size:10px;color:var(--sub);}
+        .lang-tabs{display:flex;gap:8px;margin-bottom:14px;}
+        .lang-tab{flex:1;padding:10px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;color:var(--sub);transition:all 0.2s;}
+        .lang-tab.active{background:rgba(26,111,168,0.08);border-color:var(--blue-dark);color:var(--blue-dark);}
+        .field-group{margin-bottom:14px;}
+        .field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--sub);margin-bottom:7px;display:block;}
+        .field-input{width:100%;padding:13px 15px;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:all 0.3s;}
+        .field-input:focus{border-color:var(--blue-dark);background:var(--white);box-shadow:0 0 0 3px rgba(26,111,168,0.1);}
+        .field-input::placeholder{color:#B8C5D6;}
+        .field-textarea{width:100%;padding:13px 15px;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;resize:none;min-height:90px;transition:all 0.3s;}
+        .field-textarea:focus{border-color:var(--blue-dark);background:var(--white);}
+        .field-textarea::placeholder{color:#B8C5D6;}
+        .letter-preview{background:var(--white);border:2px solid var(--blue2);border-radius:18px;padding:20px;margin-bottom:12px;display:none;}
+        .letter-preview.show{display:block;}
+        .letter-date{font-size:12px;color:var(--sub);margin-bottom:12px;}
+        .letter-to{font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.6;}
+        .letter-subject{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--navy);margin-bottom:14px;padding:10px 14px;background:rgba(26,111,168,0.06);border-left:3px solid var(--blue-dark);border-radius:0 10px 10px 0;}
+        .letter-body{font-size:13px;color:var(--text);line-height:1.8;margin-bottom:16px;}
+        .letter-sign{font-size:13px;color:var(--text);}
+        .letter-sign strong{font-family:'Syne',sans-serif;color:var(--navy);}
+        .gen-box{text-align:center;padding:28px;background:var(--white);border-radius:18px;margin-bottom:12px;display:none;}
+        .gen-box.show{display:block;}
+        .gen-ico{font-size:48px;display:block;margin-bottom:12px;animation:spin 2s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .gen-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+        .gen-sub{font-size:13px;color:var(--sub);}
+        .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,111,168,0.35);}
+        .btn-secondary{width:100%;padding:13px;background:var(--white);border:1.5px solid var(--border);border-radius:14px;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px;}
+        .btn-secondary:hover{border-color:var(--blue2);}
+        .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+        .btn-half{padding:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;color:var(--blue-dark);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
+        .btn-half:hover{border-color:var(--blue-dark);background:#EFF8FF;}
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:12px;padding:11px 20px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;}
+        .toast.on{transform:translateX(-50%) translateY(0);}
+        @media print {
+            .topbar, .section:first-of-type, #step1, #step2,
+            #genBox, #letterActions, .toast, .btn-primary, .btn-secondary,
+            .btn-row, .btn-half { display: none !important; }
+            body { background: white; padding: 20px; }
+            .letter-preview { display: block !important; border: none; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="t-back" onclick="window.location.href='home.html'">←</div>
+        <div class="t-title">Letter <span>Writer</span></div>
+        <div style="width:38px"></div>
+    </div>
+    <div class="page">
+        <div class="hero-card">
+            <span class="hero-ico">✍️</span>
+            <div class="hero-title">AI Letter Writer</div>
+            <div class="hero-sub">Leave, job, complaint — AI writes the perfect letter!</div>
+        </div>
+
+        <!-- Step 1: Type -->
+        <div id="step1">
+            <div class="section">
+                <div class="sec-title">Select Application Type</div>
+                <div class="type-grid">
+                    <div class="type-card active" id="type_leave" onclick="selectType('leave')">
+                        <span class="type-ico">🏖️</span>
+                        <div class="type-name">Leave</div>
+                        <div class="type-sub">Leave application</div>
+                    </div>
+                    <div class="type-card" id="type_job" onclick="selectType('job')">
+                        <span class="type-ico">💼</span>
+                        <div class="type-name">Job</div>
+                        <div class="type-sub">Job application</div>
+                    </div>
+                    <div class="type-card" id="type_complaint" onclick="selectType('complaint')">
+                        <span class="type-ico">📢</span>
+                        <div class="type-name">Complaint</div>
+                        <div class="type-sub">Complaint letter</div>
+                    </div>
+                    <div class="type-card" id="type_bank" onclick="selectType('bank')">
+                        <span class="type-ico">🏦</span>
+                        <div class="type-name">Bank</div>
+                        <div class="type-sub">Bank application</div>
+                    </div>
+                    <div class="type-card" id="type_school" onclick="selectType('school')">
+                        <span class="type-ico">🎓</span>
+                        <div class="type-name">School/College</div>
+                        <div class="type-sub">Admission, TC</div>
+                    </div>
+                    <div class="type-card" id="type_custom" onclick="selectType('custom')">
+                        <span class="type-ico">📝</span>
+                        <div class="type-name">Custom</div>
+                        <div class="type-sub">Any application</div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="goToDetails()">Next: Fill Details →</button>
+        </div>
+
+        <!-- Step 2: Details -->
+        <div id="step2" style="display:none">
+            <div class="section">
+                <div class="sec-title">Application Details</div>
+                <div class="field-group">
+                    <label class="field-label">Language</label>
+                    <div class="lang-tabs">
+                        <div class="lang-tab active" id="lang_en" onclick="selectLang('en')">English</div>
+                        <div class="lang-tab" id="lang_hi" onclick="selectLang('hi')">Hindi</div>
+                        <div class="lang-tab" id="lang_mr" onclick="selectLang('mr')">Marathi</div>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Your Full Name *</label>
+                    <input class="field-input" id="l_name" type="text" placeholder="Enter your full name">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">To (Recipient) *</label>
+                    <input class="field-input" id="l_to" type="text" placeholder="e.g. Principal, Manager, Bank Manager">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Organization / Place</label>
+                    <input class="field-input" id="l_place" type="text" placeholder="e.g. KBP College Vashi, SBI Bank">
+                </div>
+                <div class="field-group" id="leaveFields">
+                    <label class="field-label">Leave Duration</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <input class="field-input" id="l_from" type="date">
+                        <input class="field-input" id="l_to_date" type="date">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Additional Details (Optional)</label>
+                    <textarea class="field-textarea" id="l_extra" placeholder="Any extra information..."></textarea>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="generateLetter()">🤖 Generate Letter with AI</button>
+            <button class="btn-secondary" onclick="document.getElementById('step1').style.display='block';document.getElementById('step2').style.display='none'">← Back</button>
+        </div>
+
+        <!-- Generating -->
+        <div class="gen-box" id="genBox">
+            <span class="gen-ico">🤖</span>
+            <div class="gen-title">Writing your letter...</div>
+            <div class="gen-sub">Please wait a moment</div>
+        </div>
+
+        <!-- Letter Preview -->
+        <div class="letter-preview" id="letterPreview">
+            <div class="letter-date" id="l_preview_date"></div>
+            <div class="letter-to" id="l_preview_to"></div>
+            <div class="letter-subject" id="l_preview_subject"></div>
+            <div class="letter-body" id="l_preview_body"></div>
+            <div class="letter-sign" id="l_preview_sign"></div>
+        </div>
+
+        <div id="letterActions" style="display:none">
+            <div class="btn-row">
+                <button class="btn-half" onclick="copyLetter()">📋 Copy</button>
+                <button class="btn-half" onclick="shareLetter()">📤 Share</button>
+            </div>
+            <button class="btn-primary" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            <button class="btn-secondary" onclick="resetLetter()">✍️ Write New Letter</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toastEl"></div>
+    <script src="global-app.js"></script>
+    <script>
+        var selectedType = 'leave';
+        var selectedLang = 'en';
+
+        function selectType(type) {
+            selectedType = type;
+            document.querySelectorAll('.type-card').forEach(function(c){c.classList.remove('active');});
+            document.getElementById('type_'+type).classList.add('active');
+        }
+
+        function goToDetails() {
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+            document.getElementById('leaveFields').style.display = selectedType==='leave'?'block':'none';
+            var profile = JSON.parse(localStorage.getItem('fa_vault_self')||'{}');
+            if(profile.name) document.getElementById('l_name').value = profile.name;
+        }
+
+        function selectLang(lang) {
+            selectedLang = lang;
+            document.querySelectorAll('.lang-tab').forEach(function(t){t.classList.remove('active');});
+            document.getElementById('lang_'+lang).classList.add('active');
+        }
+
+        function generateLetter() {
+            var name = document.getElementById('l_name').value.trim();
+            var to = document.getElementById('l_to').value.trim();
+            if(!name||!to){toast('⚠️ Please fill your name and recipient!');return;}
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('genBox').classList.add('show');
+            setTimeout(function(){
+                document.getElementById('genBox').classList.remove('show');
+                buildLetter(name, to);
+            }, 2000);
+        }
+
+        function buildLetter(name, to) {
+            var place = document.getElementById('l_place').value.trim() || 'Respected Organization';
+            var extra = document.getElementById('l_extra').value.trim();
+            var today = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+
+            var templates = {
+                en: {
+                    leave: {sub:'Subject: Application for Leave', body:'Respected Sir/Madam,\n\nI am '+name+', and I am writing to request a leave of absence due to '+(extra||'personal reasons')+'.\n\nI kindly request you to grant me leave and I assure you that I will complete all pending work before leaving.\n\nThank you for your kind consideration.'},
+                    job: {sub:'Subject: Job Application', body:'Respected Sir/Madam,\n\nI, '+name+', am writing to apply for a suitable position in your esteemed organization. I am a dedicated and hardworking individual eager to contribute to your team.\n\n'+(extra||'I am confident that my skills and enthusiasm will be an asset to your organization.')+'\n\nI request an opportunity for an interview at your convenience.'},
+                    complaint: {sub:'Subject: Complaint Regarding '+(extra||'Service'), body:'Respected Sir/Madam,\n\nI, '+name+', am writing to bring to your attention a complaint regarding '+(extra||'the service received')+'.\n\nI request you to look into this matter urgently and take necessary action to resolve this issue at the earliest.\n\nI hope for a prompt response.'},
+                    bank: {sub:'Subject: Application for Bank Services', body:'Respected Branch Manager,\n\nI, '+name+', am a customer of your bank and am writing to request '+(extra||'assistance with my account')+'.\n\nI request you to kindly process my application at the earliest convenience.\n\nI shall be grateful for your kind assistance.'},
+                    school: {sub:'Subject: Application for Admission', body:'Respected Principal,\n\nI, '+name+', am writing to request '+(extra||'admission to your esteemed institution')+'.\n\nI assure you that I will follow all rules and regulations sincerely.\n\nI request you to kindly consider my application favorably.'},
+                    custom: {sub:'Subject: Application — '+(extra?extra.substring(0,40):'Request'), body:'Respected Sir/Madam,\n\nI, '+name+', am writing to bring the following matter to your kind notice:\n\n'+(extra||'I request you to please look into this matter and provide necessary assistance.')+'\n\nI hope for a positive response at the earliest.'}
+                },
+                hi: {
+                    leave: {sub:'विषय: अवकाश हेतु आवेदन', body:'माननीय महोदय/महोदया,\n\nमैं '+name+' हूँ और '+(extra||'व्यक्तिगत कारणों')+' से अवकाश के लिए आवेदन कर रहा/रही हूँ।\n\nकृपया मुझे अवकाश प्रदान करने की कृपा करें। मैं आपको आश्वस्त करता/करती हूँ कि सभी लंबित कार्य पूर्ण कर लूँगा/लूँगी।\n\nधन्यवाद।'},
+                    job: {sub:'विषय: नौकरी हेतु आवेदन', body:'माननीय महोदय/महोदया,\n\nमैं '+name+' आपकी प्रतिष्ठित संस्था में उचित पद के लिए आवेदन कर रहा/रही हूँ।\n\n'+(extra||'मैं एक मेहनती और समर्पित व्यक्ति हूँ जो आपकी टीम में योगदान देने के लिए उत्सुक है।')+'\n\nकृपया मुझे साक्षात्कार का अवसर प्रदान करें।'},
+                    complaint: {sub:'विषय: शिकायत', body:'माननीय महोदय/महोदया,\n\nमैं '+name+' '+(extra||'सेवा संबंधी')+' शिकायत के बारे में लिख रहा/रही हूँ।\n\nकृपया इस मामले पर शीघ्र ध्यान देकर उचित कार्रवाई करें।\n\nधन्यवाद।'},
+                    bank: {sub:'विषय: बैंक सेवा हेतु आवेदन', body:'माननीय शाखा प्रबंधक,\n\nमैं '+name+' आपके बैंक का ग्राहक/ग्राहिका हूँ और '+(extra||'खाता संबंधी सहायता')+' के लिए आवेदन कर रहा/रही हूँ।\n\nकृपया जल्द से जल्द मेरे आवेदन पर कार्रवाई करें।\n\nधन्यवाद।'},
+                    school: {sub:'विषय: प्रवेश हेतु आवेदन', body:'माननीय प्राचार्य,\n\nमैं '+name+' '+(extra||'आपकी प्रतिष्ठित संस्था में प्रवेश')+' के लिए आवेदन कर रहा/रही हूँ।\n\nमैं आपको विश्वास दिलाता/दिलाती हूँ कि संस्था के सभी नियमों का पालन करूँगा/करूँगी।\n\nकृपया मेरे आवेदन पर विचार करें।'},
+                    custom: {sub:'विषय: आवेदन', body:'माननीय महोदय/महोदया,\n\nमैं '+name+' निम्नलिखित विषय पर आपका ध्यान आकर्षित करना चाहता/चाहती हूँ:\n\n'+(extra||'कृपया इस विषय पर उचित कार्रवाई करें।')+'\n\nधन्यवाद।'}
+                },
+                mr: {
+                    leave: {sub:'विषय: रजा अर्जासाठी', body:'मान्यवर,\n\nमी '+name+' असून '+(extra||'वैयक्तिक कारणास्तव')+' रजेसाठी अर्ज करत आहे.\n\nकृपया मला रजा मंजूर करावी. सर्व प्रलंबित काम पूर्ण करून जाईन याची खात्री देतो/देते.\n\nधन्यवाद।'},
+                    job: {sub:'विषय: नोकरीसाठी अर्ज', body:'मान्यवर,\n\nमी '+name+' आपल्या प्रतिष्ठित संस्थेत योग्य पदासाठी अर्ज करत आहे.\n\n'+(extra||'मी एक मेहनती आणि समर्पित व्यक्ती असून आपल्या टीममध्ये योगदान देण्यास उत्सुक आहे.')+'\n\nकृपया मुलाखतीची संधी द्यावी.'},
+                    complaint: {sub:'विषय: तक्रार', body:'मान्यवर,\n\nमी '+name+' '+(extra||'सेवेबद्दल')+' तक्रार नोंदवण्यासाठी लिहित आहे.\n\nकृपया या प्रकरणात तातडीने लक्ष घालून योग्य कारवाई करावी.\n\nधन्यवाद।'},
+                    bank: {sub:'विषय: बँक सेवेसाठी अर्ज', body:'मान्यवर शाखा व्यवस्थापक,\n\nमी '+name+' आपल्या बँकेचा ग्राहक असून '+(extra||'खाते संबंधित मदत')+' साठी अर्ज करत आहे.\n\nकृपया माझ्या अर्जावर लवकरात लवकर कार्यवाही करावी.\n\nधन्यवाद।'},
+                    school: {sub:'विषय: प्रवेशासाठी अर्ज', body:'मान्यवर मुख्याध्यापक,\n\nमी '+name+' '+(extra||'आपल्या प्रतिष्ठित संस्थेत प्रवेश')+' साठी अर्ज करत आहे.\n\nसंस्थेच्या सर्व नियमांचे पालन करेन याची खात्री देतो/देते.\n\nकृपया माझ्या अर्जावर विचार करावा.'},
+                    custom: {sub:'विषय: अर्ज', body:'मान्यवर,\n\nमी '+name+' खालील विषयाकडे आपले लक्ष वेधू इच्छितो/इच्छिते:\n\n'+(extra||'कृपया या विषयावर योग्य कारवाई करावी.')+'\n\nधन्यवाद।'}
+                }
+            };
+
+            var signoffs = {en:'Yours sincerely,', hi:'आपका विश्वासी,', mr:'आपला विश्वासू,'};
+            var t = (templates[selectedLang]||templates['en'])[selectedType]||(templates[selectedLang]||templates['en'])['custom'];
+
+            document.getElementById('l_preview_date').textContent = 'Date: '+today;
+            document.getElementById('l_preview_to').innerHTML = 'To,<br>The '+to+'<br>'+place;
+            document.getElementById('l_preview_subject').textContent = t.sub;
+            document.getElementById('l_preview_body').innerHTML = t.body.replace(/\n/g,'<br>');
+            document.getElementById('l_preview_sign').innerHTML = signoffs[selectedLang]+'<br><br><strong>'+name+'</strong>';
+            document.getElementById('letterPreview').classList.add('show');
+            document.getElementById('letterActions').style.display = 'block';
+            toast('✅ Letter ready!');
+        }
+
+        function copyLetter(){
+            var text = document.getElementById('letterPreview').innerText;
+            navigator.clipboard.writeText(text).then(function(){toast('📋 Letter copied!');}).catch(function(){toast('Please select and copy manually!');});
+        }
+        function shareLetter(){
+            if(navigator.share){navigator.share({title:'Letter - FormAssist',text:document.getElementById('l_preview_body').innerText});}
+            else{toast('Copy and share manually!');}
+        }
+        function resetLetter(){
+            document.getElementById('letterPreview').classList.remove('show');
+            document.getElementById('letterActions').style.display='none';
+            document.getElementById('step1').style.display='block';
+        }
+
+        var tt;
+        function toast(msg){var el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('on');},2500);}
+    </script>
+</body>
+</html>

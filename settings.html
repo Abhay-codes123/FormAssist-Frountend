@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormAssist - Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--white:#FFFFFF;--bg:#F4F7FB;--blue:#87CEEB;--blue2:#ADD8E6;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--amber:#F59E0B;--shadow:0 4px 24px rgba(26,111,168,0.10);}
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;padding-bottom:40px;}
+        .topbar{position:fixed;top:0;left:0;right:0;height:58px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;box-shadow:0 1px 8px rgba(26,35,64,0.05);}
+        .t-back{width:38px;height:38px;border-radius:11px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+        .t-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);}
+        .page{padding:70px 16px 20px;}
+        .version-card{background:linear-gradient(135deg,var(--blue-dark),var(--navy2));border-radius:20px;padding:20px;text-align:center;margin-bottom:14px;color:white;}
+        .v-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;}
+        .v-ver{font-size:12px;opacity:0.75;}
+        .section{background:var(--white);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(26,35,64,0.05);}
+        .sec-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
+        .setting-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+        .setting-row:last-child{border-bottom:none;}
+        .s-ico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+        .s-txt{flex:1;}
+        .s-label{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;}
+        .s-sub{font-size:11px;color:var(--sub);}
+        .toggle{width:46px;height:26px;border-radius:13px;background:var(--border);position:relative;cursor:pointer;transition:all 0.3s;flex-shrink:0;border:none;}
+        .toggle.on{background:var(--blue-dark);}
+        .toggle::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:white;top:3px;left:3px;transition:all 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+        .toggle.on::after{left:23px;}
+        .s-select{padding:7px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;}
+        .s-select:focus{border-color:var(--blue-dark);}
+        .slider-wrap{width:100%;margin-top:8px;}
+        .slider-input{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;}
+        .slider-input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue-dark);cursor:pointer;box-shadow:0 2px 6px rgba(26,111,168,0.3);}
+        .slider-val{font-size:12px;color:var(--blue-dark);font-weight:700;text-align:right;margin-top:4px;}
+        .action-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+        .action-row:last-child{border-bottom:none;}
+        .action-row:hover{opacity:0.75;}
+        .action-arrow{margin-left:auto;color:var(--sub);font-size:18px;}
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:12px;padding:11px 20px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;}
+        .toast.on{transform:translateX(-50%) translateY(0);}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="t-back" onclick="window.location.href='home.html'">←</div>
+        <div class="t-title">Settings</div>
+        <div style="width:38px"></div>
+    </div>
+    <div class="page">
+        <div class="version-card">
+            <div class="v-name">FormAssist</div>
+            <div class="v-ver">Version 1.0.0 Beta • AI-Powered Form Assistant</div>
+        </div>
+
+        <!-- Language -->
+        <div class="section">
+            <div class="sec-title">Language</div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">🌐</div>
+                <div class="s-txt">
+                    <div class="s-label">App Language</div>
+                    <div class="s-sub">Choose your preferred language</div>
+                </div>
+                <select class="s-select" id="langSelect" onchange="changeLanguage(this.value)">
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                    <option value="mr">Marathi</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Voice -->
+        <div class="section">
+            <div class="sec-title">Voice Settings</div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">🔊</div>
+                <div class="s-txt">
+                    <div class="s-label">Voice Assistant</div>
+                    <div class="s-sub">AI reads out responses</div>
+                </div>
+                <button class="toggle on" id="voiceToggle" onclick="toggleSetting('voice',this)"></button>
+            </div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">⚡</div>
+                <div class="s-txt">
+                    <div class="s-label">Voice Speed</div>
+                    <div class="slider-wrap">
+                        <input type="range" class="slider-input" id="speedSlider" min="1" max="3" value="2" oninput="changeSpeed(this.value)">
+                        <div class="slider-val" id="speedVal">Normal</div>
+                    </div>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">🎤</div>
+                <div class="s-txt">
+                    <div class="s-label">Auto Read Forms</div>
+                    <div class="s-sub">Automatically read form fields</div>
+                </div>
+                <button class="toggle on" id="autoReadToggle" onclick="toggleSetting('autoRead',this)"></button>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="section">
+            <div class="sec-title">Security</div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">👆</div>
+                <div class="s-txt">
+                    <div class="s-label">Fingerprint Login</div>
+                    <div class="s-sub">Use biometric to unlock app</div>
+                </div>
+                <button class="toggle" id="fingerprintToggle" onclick="toggleSetting('fingerprint',this)"></button>
+            </div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">⏱️</div>
+                <div class="s-txt">
+                    <div class="s-label">Auto Logout</div>
+                    <div class="slider-wrap">
+                        <input type="range" class="slider-input" id="logoutSlider" min="1" max="30" value="10" oninput="changeLogout(this.value)">
+                        <div class="slider-val" id="logoutVal">10 minutes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="section">
+            <div class="sec-title">Notifications</div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">🔔</div>
+                <div class="s-txt">
+                    <div class="s-label">Push Notifications</div>
+                    <div class="s-sub">New schemes and updates</div>
+                </div>
+                <button class="toggle on" id="notifToggle" onclick="toggleSetting('notif',this)"></button>
+            </div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">📅</div>
+                <div class="s-txt">
+                    <div class="s-label">Form Reminders</div>
+                    <div class="s-sub">Remind for pending forms</div>
+                </div>
+                <button class="toggle on" id="reminderToggle" onclick="toggleSetting('reminder',this)"></button>
+            </div>
+            <div class="setting-row">
+                <div class="s-ico" style="background:#EFF8FF">📄</div>
+                <div class="s-txt">
+                    <div class="s-label">Document Expiry Alerts</div>
+                    <div class="s-sub">Alert before documents expire</div>
+                </div>
+                <button class="toggle on" id="expiryToggle" onclick="toggleSetting('expiry',this)"></button>
+            </div>
+        </div>
+
+        <!-- App -->
+        <div class="section">
+            <div class="sec-title">App</div>
+            <div class="action-row" onclick="rateApp()">
+                <div class="s-ico" style="background:#FFFBEB">⭐</div>
+                <div class="s-txt"><div class="s-label">Rate FormAssist</div><div class="s-sub">Love the app? Rate us!</div></div>
+                <span class="action-arrow">›</span>
+            </div>
+            <div class="action-row" onclick="shareApp()">
+                <div class="s-ico" style="background:#ECFDF5">📤</div>
+                <div class="s-txt"><div class="s-label">Share App</div><div class="s-sub">Share with friends & family</div></div>
+                <span class="action-arrow">›</span>
+            </div>
+            <div class="action-row" onclick="toast('We never store sensitive data permanently.')">
+                <div class="s-ico" style="background:#EFF8FF">🔒</div>
+                <div class="s-txt"><div class="s-label">Privacy Policy</div><div class="s-sub">How we protect your data</div></div>
+                <span class="action-arrow">›</span>
+            </div>
+            <div class="action-row" onclick="toast('Use FormAssist for legitimate form filling only.')">
+                <div class="s-ico" style="background:#EFF8FF">📋</div>
+                <div class="s-txt"><div class="s-label">Terms of Service</div><div class="s-sub">Our terms and conditions</div></div>
+                <span class="action-arrow">›</span>
+            </div>
+        </div>
+
+        <!-- Danger -->
+        <div class="section">
+            <div class="sec-title">Danger Zone</div>
+            <div class="action-row" onclick="clearData()">
+                <div class="s-ico" style="background:#FEF2F2">🗑️</div>
+                <div class="s-txt"><div class="s-label" style="color:var(--coral)">Clear All Data</div><div class="s-sub">Remove all saved forms and data</div></div>
+                <span class="action-arrow">›</span>
+            </div>
+            <div class="action-row" onclick="logout()">
+                <div class="s-ico" style="background:#FEF2F2">🚪</div>
+                <div class="s-txt"><div class="s-label" style="color:var(--coral)">Logout</div><div class="s-sub">Sign out from this device</div></div>
+                <span class="action-arrow">›</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toastEl"></div>
+    <script src="global-app.js"></script>
+    <script>
+        var settings = JSON.parse(localStorage.getItem('fa_settings')||'{}');
+        var autoLogoutTimer = null;
+
+        window.addEventListener('load', function(){
+            var lang = localStorage.getItem('fa_lang')||'en';
+            document.getElementById('langSelect').value = lang;
+            var speed = settings.speed||2;
+            document.getElementById('speedSlider').value = speed;
+            document.getElementById('speedVal').textContent = ['','Slow','Normal','Fast'][speed];
+            var logout = settings.autoLogout||10;
+            document.getElementById('logoutSlider').value = logout;
+            document.getElementById('logoutVal').textContent = logout+' minutes';
+            if(settings.fingerprint) document.getElementById('fingerprintToggle').classList.add('on');
+            if(settings.voice===false) document.getElementById('voiceToggle').classList.remove('on');
+            if(settings.autoRead===false) document.getElementById('autoReadToggle').classList.remove('on');
+            if(settings.notif===false) document.getElementById('notifToggle').classList.remove('on');
+            if(settings.reminder===false) document.getElementById('reminderToggle').classList.remove('on');
+            if(settings.expiry===false) document.getElementById('expiryToggle').classList.remove('on');
+            startAutoLogout();
+        });
+
+        function toggleSetting(key, el){
+            var isOn = el.classList.toggle('on');
+            settings[key] = isOn;
+            saveSettings();
+            toast(key.charAt(0).toUpperCase()+key.slice(1)+': '+(isOn?'On':'Off'));
+        }
+
+        function changeLanguage(val){
+            settings.lang = val;
+            localStorage.setItem('fa_lang', val);
+            saveSettings();
+            var names = {en:'English',hi:'Hindi',mr:'Marathi'};
+            toast('Language changed to '+names[val]);
+        }
+
+        function changeSpeed(val){
+            settings.speed = parseInt(val);
+            document.getElementById('speedVal').textContent = ['','Slow','Normal','Fast'][val];
+            saveSettings();
+        }
+
+        function changeLogout(val){
+            settings.autoLogout = parseInt(val);
+            document.getElementById('logoutVal').textContent = val+' minutes';
+            saveSettings();
+            startAutoLogout();
+        }
+
+        function startAutoLogout(){
+            clearTimeout(autoLogoutTimer);
+            var mins = settings.autoLogout||10;
+            autoLogoutTimer = setTimeout(function(){
+                localStorage.removeItem('fa_token');
+                window.location.href = 'index.html';
+            }, mins*60*1000);
+        }
+
+        function saveSettings(){ localStorage.setItem('fa_settings', JSON.stringify(settings)); }
+
+        function rateApp(){ toast('⭐ Thank you for rating FormAssist!'); }
+
+        function shareApp(){
+            if(navigator.share){
+                navigator.share({title:'FormAssist',text:'AI-Powered Form Assistant — Fill any form easily!',url:window.location.origin});
+            } else {
+                navigator.clipboard.writeText('Try FormAssist — AI Form Assistant!').then(function(){toast('📋 Link copied!');});
+            }
+        }
+
+        function clearData(){
+            if(confirm('Clear all saved forms and data? Your account will remain.')){
+                var token=localStorage.getItem('fa_token');
+                var uname=localStorage.getItem('fa_username');
+                localStorage.clear();
+                if(token) localStorage.setItem('fa_token',token);
+                if(uname) localStorage.setItem('fa_username',uname);
+                toast('✅ All data cleared!');
+            }
+        }
+
+        function logout(){
+            if(confirm('Are you sure you want to logout?')){
+                localStorage.removeItem('fa_token');
+                localStorage.removeItem('fa_username');
+                localStorage.removeItem('fa_demo_mode');
+                window.location.href='index.html';
+            }
+        }
+
+        var tt;
+        function toast(msg){var el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('on');},2500);}
+    </script>
+</body>
+</html>
