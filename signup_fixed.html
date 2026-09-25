@@ -184,10 +184,9 @@
     <div class="toast" id="toastEl"></div>
     <script>
         // =============================================
-        // API CONFIG — Replit URL yahan daalo
+        // API CONFIG
         // =============================================
         var API_BASE = 'https://formassist-backend-bydu.onrender.com';
-        var DEMO_MODE = false; // Backend offline hone par auto true hoga
         var generatedOTP = '';
         var mobileNum = '';
 
@@ -236,37 +235,37 @@
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({mobile: m}),
-                    signal: AbortSignal.timeout(5000)
+                    signal: AbortSignal.timeout(10000)
                 });
                 var data = await res.json();
 
                 if(!res.ok){
-                    showErr(1, data.detail || 'Failed to send OTP!');
+                    var err = data.detail || data.message || 'Failed to send OTP!';
+                    if(Array.isArray(err)) err = err.map(function(e){ return e.msg || e; }).join(', ');
+                    showErr(1, err);
+                    t('❌ ' + err);
                     btn.disabled=false; btn.textContent='Send OTP →';
                     return;
                 }
 
-                // Real mode — show demo OTP only if backend sends it
                 if(data.demo_otp){
                     generatedOTP = data.demo_otp;
                     document.getElementById('demoOtpBox').style.display='block';
                     document.getElementById('demoOtp').textContent = data.demo_otp;
+                } else {
+                    document.getElementById('demoOtpBox').style.display='none';
                 }
-                DEMO_MODE = false;
+
+                document.getElementById('otpSub').textContent='OTP sent to +91 '+m;
+                t('📱 OTP sent!');
+                btn.disabled=false; btn.textContent='Send OTP →';
+                goStep(2);
 
             } catch(e){
-                // Backend offline — Demo mode
-                DEMO_MODE = true;
-                generatedOTP = String(Math.floor(100000+Math.random()*900000));
-                document.getElementById('demoOtpBox').style.display='block';
-                document.getElementById('demoOtp').textContent = generatedOTP;
-                document.getElementById('demoBanner1').classList.add('show');
+                showErr(1,'Connection error! Server offline or request timed out.');
+                t('❌ Server offline or request timed out.');
+                btn.disabled=false; btn.textContent='Send OTP →';
             }
-
-            document.getElementById('otpSub').textContent='OTP sent to +91 '+m;
-            t('📱 OTP sent!');
-            btn.disabled=false; btn.textContent='Send OTP →';
-            goStep(2);
         }
 
         function otpMove(el,nextId){
@@ -289,39 +288,33 @@
             var btn = document.getElementById('verifyBtn');
             btn.disabled=true; btn.textContent='Verifying...';
 
-            if(DEMO_MODE){
-                // Demo mode — local OTP check
-                if(entered !== generatedOTP){
-                    showErr(2,'Invalid OTP! Try again.');
-                    btn.disabled=false; btn.textContent='Verify OTP →';
-                    return;
-                }
-            } else {
-                try {
-                    var res = await fetch(API_BASE + '/auth/verify-otp', {
-                        method: 'POST',
-                        headers: {'Content-Type':'application/json'},
-                        body: JSON.stringify({mobile: mobileNum, otp: entered}),
-                        signal: AbortSignal.timeout(5000)
-                    });
-                    var data = await res.json();
+            try {
+                var res = await fetch(API_BASE + '/auth/verify-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({mobile: mobileNum, otp: entered}),
+                    signal: AbortSignal.timeout(10000)
+                });
+                var data = await res.json();
 
-                    // FIX: Explicitly check success
-                    if(!res.ok || !data.success){
-                        showErr(2, data.detail || 'Invalid OTP! Try again.');
-                        btn.disabled=false; btn.textContent='Verify OTP →';
-                        return;
-                    }
-                } catch(e){
-                    showErr(2,'Network error! Check connection.');
+                if(!res.ok || data.success === false){
+                    var err = data.detail || data.message || 'Invalid OTP! Try again.';
+                    if(Array.isArray(err)) err = err.map(function(e){ return e.msg || e; }).join(', ');
+                    showErr(2, err);
+                    t('❌ ' + err);
                     btn.disabled=false; btn.textContent='Verify OTP →';
                     return;
                 }
+
+                btn.disabled=false; btn.textContent='Verify OTP →';
+                t('✅ Mobile verified!');
+                goStep(3);
+
+            } catch(e){
+                showErr(2,'Network error! Check connection.');
+                t('❌ Network error! Check connection.');
+                btn.disabled=false; btn.textContent='Verify OTP →';
             }
-
-            btn.disabled=false; btn.textContent='Verify OTP →';
-            t('✅ Mobile verified!');
-            goStep(3);
         }
 
         function checkUsername(el){
@@ -376,15 +369,8 @@
             var btn=document.getElementById('createBtn');
             btn.disabled=true; btn.textContent='Creating...';
 
-            if(DEMO_MODE){
-                // Demo mode — save locally
-                localStorage.setItem('fa_token','demo_token_'+Date.now());
-                localStorage.setItem('fa_username', document.getElementById('uname').value.trim());
-                btn.disabled=false; btn.textContent='Create Account →';
-                t('🎉 Account created! (Demo Mode)');
-                goStep(5);
-                return;
-            }
+            var u = document.getElementById('uname').value.trim();
+            var p = document.getElementById('upass').value;
 
             try {
                 var res = await fetch(API_BASE + '/auth/signup', {
@@ -392,34 +378,34 @@
                     headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({
                         mobile: mobileNum,
-                        username: document.getElementById('uname').value.trim(),
-                        password: document.getElementById('upass').value,
-                        // FIX: Backend field name match — secret_phrase
+                        username: u,
+                        password: p,
                         secret_phrase: ph
                     }),
-                    signal: AbortSignal.timeout(8000)
+                    signal: AbortSignal.timeout(10000)
                 });
                 var data = await res.json();
 
-                // FIX: Explicitly check res.ok AND data.success
-                if(!res.ok || !data.success){
-                    showErr(4, data.detail || 'Account creation failed! Try again.');
+                if(!res.ok || data.success === false){
+                    var err = data.detail || data.message || 'Account creation failed! Try again.';
+                    if(Array.isArray(err)) err = err.map(function(e){ return e.msg || e; }).join(', ');
+                    showErr(4, err);
+                    t('❌ ' + err);
                     btn.disabled=false; btn.textContent='Create Account →';
                     return;
                 }
 
-                // Success — save token
-                localStorage.setItem('fa_token', data.token);
-                localStorage.setItem('fa_username', data.username);
+                var token = data.token || data.access_token || ('token_' + Date.now());
+                localStorage.setItem('fa_token', token);
+                localStorage.setItem('fa_username', data.username || u);
                 t('🎉 Account created successfully!');
-                goStep(5); // Only go to step 5 on real success
+                goStep(5);
 
             } catch(e){
                 showErr(4,'Network error! Please try again.');
+                t('❌ Network error! Please try again.');
                 btn.disabled=false; btn.textContent='Create Account →';
             }
-
-            btn.disabled=false; btn.textContent='Create Account →';
         }
 
         function googleSignup(){
