@@ -476,25 +476,56 @@
         function handleFileUpload(input){
             if(!input.files||!input.files[0])return;
             var file=input.files[0];
-            if(file.type.startsWith('image/')){
-                var reader=new FileReader();
-                reader.onload=function(e){document.getElementById('imgPreview').src=e.target.result;document.getElementById('imgPreviewWrap').style.display='block';document.getElementById('imgFileName').textContent=file.name;};
-                reader.readAsDataURL(file);
-            } else {document.getElementById('imgPreviewWrap').style.display='block';document.getElementById('imgFileName').textContent='📄 '+file.name;}
+            var reader=new FileReader();
+            reader.onload=function(e){
+                var base64Data = e.target.result;
+                if(file.type.startsWith('image/')){
+                    document.getElementById('imgPreview').src=base64Data;
+                    document.getElementById('imgPreviewWrap').style.display='block';
+                    document.getElementById('imgFileName').textContent=file.name;
+                } else {
+                    document.getElementById('imgPreviewWrap').style.display='block';
+                    document.getElementById('imgFileName').textContent='📄 '+file.name;
+                }
+                analyzeHomeDoc(file.name, base64Data);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function analyzeHomeDoc(filename, base64Data){
             toast('🤖 AI analyzing...');
-            setTimeout(function(){
-                var fname=file.name.toLowerCase();
-                var detected='Government Document';
-                var docs=['Aadhar Card required','PAN Card required','Passport size photo','Address proof required'];
-                if(fname.includes('passport')){detected='Passport Application Form';}
-                else if(fname.includes('aadhar')||fname.includes('aadhaar')){detected='Aadhar Card';docs=['Original Aadhar Card','Address proof','Mobile number'];}
-                else if(fname.includes('pan')){detected='PAN Card';docs=['Aadhar Card','DOB proof','Passport photo'];}
-                document.getElementById('docResultTitle').textContent='📋 '+detected+' Detected';
-                docs.forEach(function(d,i){var el=document.getElementById('dr'+(i+1));if(el)el.textContent=d;});
-                document.getElementById('docResult').classList.add('show');
-                document.getElementById('docFillBtn').classList.add('show');
-                toast('✅ '+detected+' identified!');
-            },1500);
+            try {
+                var res = await fetch(FA.API_BASE + '/ai/analyze-document', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({image_base64: base64Data, filename: filename}),
+                    signal: AbortSignal.timeout(20000)
+                });
+                var data = await res.json();
+                if(res.ok && data && (data.doc_type || data.analysis)){
+                    var detected = data.doc_type || 'Document';
+                    document.getElementById('docResultTitle').textContent='📋 '+detected+' Detected';
+                    var docs = data.docs_required || ['Valid Identity proof','Original copy for verification','Passport photo'];
+                    docs.forEach(function(d,i){var el=document.getElementById('dr'+(i+1));if(el)el.textContent=d;});
+                    document.getElementById('docResult').classList.add('show');
+                    document.getElementById('docFillBtn').classList.add('show');
+                    toast('✅ '+detected+' identified!');
+                    return;
+                }
+            } catch(e){}
+
+            // Fallback
+            var fname=filename.toLowerCase();
+            var detected='Government Document';
+            var docs=['Aadhar Card required','PAN Card required','Passport size photo','Address proof required'];
+            if(fname.includes('passport')){detected='Passport Application Form';}
+            else if(fname.includes('aadhar')||fname.includes('aadhaar')){detected='Aadhar Card';docs=['Original Aadhar Card','Address proof','Mobile number'];}
+            else if(fname.includes('pan')){detected='PAN Card';docs=['Aadhar Card','DOB proof','Passport photo'];}
+            document.getElementById('docResultTitle').textContent='📋 '+detected+' Detected';
+            docs.forEach(function(d,i){var el=document.getElementById('dr'+(i+1));if(el)el.textContent=d;});
+            document.getElementById('docResult').classList.add('show');
+            document.getElementById('docFillBtn').classList.add('show');
+            toast('✅ '+detected+' identified!');
         }
 
         // Chat
@@ -505,20 +536,37 @@
             'bank':'Bank account documents:\n- Aadhar Card\n- PAN Card\n- 1 Passport photo\n\nFor Jan Dhan (zero balance): Only Aadhar needed!',
         };
         function sendQ(q){document.getElementById('chatInput').value=q;sendChat();}
-        function sendChat(){
+        async function sendChat(){
             var inp=document.getElementById('chatInput');var msg=inp.value.trim();if(!msg)return;
             inp.value='';addMsg('user',msg);
             var typing=addMsg('ai','<span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>');
-            setTimeout(function(){
+            var lang = localStorage.getItem('fa_lang') || 'en';
+
+            try {
+                var res = await fetch(FA.API_BASE + '/ai/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: msg, language: lang}),
+                    signal: AbortSignal.timeout(15000)
+                });
+                var data = await res.json();
                 typing.remove();
-                var lower=msg.toLowerCase();
-                var reply='I can help! Try asking about passport, PM Kisan, CV building, or bank documents.';
-                if(lower.includes('passport'))reply=chatReplies['passport'];
-                else if(lower.includes('kisan'))reply=chatReplies['kisan'];
-                else if(lower.includes('cv')||lower.includes('resume'))reply=chatReplies['cv'];
-                else if(lower.includes('bank'))reply=chatReplies['bank'];
-                addMsg('ai',reply.replace(/\n/g,'<br>'));
-            },900);
+                if(res.ok && data && (data.reply || data.response || data.message)){
+                    var replyText = data.reply || data.response || data.message;
+                    addMsg('ai', replyText.replace(/\n/g,'<br>'));
+                    return;
+                }
+            } catch(e){
+                typing.remove();
+            }
+
+            var lower=msg.toLowerCase();
+            var reply='I can help! Try asking about passport, PM Kisan, CV building, or bank documents.';
+            if(lower.includes('passport'))reply=chatReplies['passport'];
+            else if(lower.includes('kisan'))reply=chatReplies['kisan'];
+            else if(lower.includes('cv')||lower.includes('resume'))reply=chatReplies['cv'];
+            else if(lower.includes('bank'))reply=chatReplies['bank'];
+            addMsg('ai',reply.replace(/\n/g,'<br>'));
         }
         function addMsg(type,content){
             var msgs=document.getElementById('chatMsgs');
@@ -563,13 +611,46 @@
             hint.className='audit-hint'+(result.msg?' '+(result.ok?'ok':'err')+' show':'');
             hint.textContent=result.msg;
         }
-        function runAudit(){
+        async function runAudit(){
             var name=document.getElementById('auditName').value.trim();
             var mobile=document.getElementById('auditMobile').value.trim();
             var aadhar=document.getElementById('auditAadhar').value.trim();
             var pan=document.getElementById('auditPan').value.trim();
             var link=document.getElementById('auditLink').value.trim();
             if(!name||!mobile||!aadhar){toast('⚠️ Fill required fields!');return;}
+
+            try {
+                var res = await fetch(FA.API_BASE + '/ai/audit-form', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({url: link, name: name, mobile: mobile, aadhar: aadhar, pan: pan}),
+                    signal: AbortSignal.timeout(15000)
+                });
+                var data = await res.json();
+                if(res.ok && data && (data.score !== undefined || data.results)){
+                    var score = typeof data.score === 'number' ? data.score : 80;
+                    var errors = typeof data.errors === 'number' ? data.errors : (data.errors ? data.errors.length : 0);
+                    var warnings = typeof data.warnings === 'number' ? data.warnings : (data.warnings ? data.warnings.length : 0);
+                    var passed = typeof data.passed === 'number' ? data.passed : (data.passed ? data.passed.length : 0);
+                    var sc = score>=80?'var(--mint)':score>=60?'var(--amber)':'var(--coral)';
+                    document.getElementById('auditScore').textContent=score;document.getElementById('auditScore').style.color=sc;
+                    document.getElementById('auditScoreFill').style.width=score+'%';document.getElementById('auditScoreFill').style.background=sc;
+                    document.getElementById('auditScoreTitle').textContent=errors===0?'✅ Safe to Submit!':score>=60?'⚠️ Fix issues before submitting':'❌ Do NOT submit yet!';
+                    document.getElementById('auditErr').textContent=errors;document.getElementById('auditWarn').textContent=warnings;document.getElementById('auditPass').textContent=passed;
+                    var resultsList = data.results || [];
+                    document.getElementById('auditResults').innerHTML = resultsList.map(function(r){
+                        var type = r.type || (r.status === 'error' ? 'err' : 'ok');
+                        var ico = r.ico || (type === 'err' ? '❌' : '✅');
+                        var ttl = r.ttl || r.title || 'Check';
+                        var desc = r.desc || r.description || '';
+                        return '<div class="result-card '+type+'"><div class="rc-head"><span class="rc-ico">'+ico+'</span><span class="rc-ttl">'+ttl+'</span></div><div class="rc-desc">'+desc+'</div></div>';
+                    }).join('');
+                    document.getElementById('auditorStep1').style.display='none';document.getElementById('auditorResult').style.display='block';
+                    return;
+                }
+            } catch(e){}
+
+            // Fallback local audit
             var results=[];var errors=0,warnings=0,passed=0;
             if(link){if(link.includes('.gov.in')){results.push({type:'ok',ico:'✅',ttl:'Valid Government Link',desc:'This is a legitimate government portal.'});passed++;}else if(link.startsWith('http')){results.push({type:'warn',ico:'⚠️',ttl:'Unverified Link',desc:'Not a known government portal. Verify before submitting.'});warnings++;}else{results.push({type:'err',ico:'❌',ttl:'Invalid Link',desc:'This does not look like a valid form link.'});errors++;}}
             if(/\d/.test(name)){results.push({type:'err',ico:'❌',ttl:'Name has Numbers!',desc:'Names cannot contain numbers.'});errors++;}else{results.push({type:'ok',ico:'✅',ttl:'Name Format OK',desc:'Name format is valid.'});passed++;}
