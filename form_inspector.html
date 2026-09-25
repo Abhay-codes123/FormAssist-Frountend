@@ -174,13 +174,88 @@
             if(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v)){el.className='field-input ok';h.className='field-hint ok show';h.textContent='✅ Valid PAN format!';}
             else{el.className='field-input err';h.className='field-hint err show';h.textContent='❌ PAN format: ABCDE1234F';}
         }
-        function runAudit(){
-            var name=document.getElementById('auditName').value.trim();
-            var mobile=document.getElementById('auditMobile').value.trim();
-            var aadhar=document.getElementById('auditAadhar').value.trim();
-            var pan=document.getElementById('auditPan').value.trim();
-            var link=document.getElementById('auditLink').value.trim();
-            if(!name||!mobile||!aadhar){toast('⚠️ Please fill Name, Mobile and Aadhar!');return;}
+        var API_BASE = 'https://formassist-backend-bydu.onrender.com';
+
+        async function runAudit(){
+            var name = document.getElementById('auditName').value.trim();
+            var mobile = document.getElementById('auditMobile').value.trim();
+            var aadhar = document.getElementById('auditAadhar').value.trim();
+            var pan = document.getElementById('auditPan').value.trim();
+            var link = document.getElementById('auditLink').value.trim();
+
+            if(!name||!mobile||!aadhar){
+                toast('⚠️ Please fill Name, Mobile and Aadhar!');
+                return;
+            }
+
+            var btn = document.querySelector('#auditForm .btn-primary');
+            var origTxt = btn ? btn.textContent : '';
+            if(btn){ btn.disabled = true; btn.textContent = '🛡️ Running AI Audit...'; }
+
+            try {
+                var res = await fetch(API_BASE + '/ai/audit-form', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: link,
+                        name: name,
+                        mobile: mobile,
+                        aadhar: aadhar,
+                        pan: pan
+                    }),
+                    signal: AbortSignal.timeout(20000)
+                });
+                var data = await res.json();
+                if(btn){ btn.disabled = false; btn.textContent = origTxt; }
+
+                if (res.ok && data && (data.score !== undefined || data.results)) {
+                    renderAuditData(data);
+                } else {
+                    toast('⚠️ AI service busy: ' + (data && (data.detail || data.message) ? data.detail || data.message : 'showing standard audit'));
+                    runLocalAudit(name, mobile, aadhar, pan, link);
+                }
+            } catch(e) {
+                if(btn){ btn.disabled = false; btn.textContent = origTxt; }
+                toast('⚠️ AI audit error: running standard check...');
+                runLocalAudit(name, mobile, aadhar, pan, link);
+            }
+        }
+
+        function renderAuditData(data) {
+            var score = typeof data.score === 'number' ? data.score : 80;
+            var errors = typeof data.errors === 'number' ? data.errors : (data.errors ? data.errors.length : 0);
+            var warnings = typeof data.warnings === 'number' ? data.warnings : (data.warnings ? data.warnings.length : 0);
+            var passed = typeof data.passed === 'number' ? data.passed : (data.passed ? data.passed.length : 0);
+
+            var color = score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444';
+            document.getElementById('scoreCircle').textContent = score;
+            document.getElementById('scoreCircle').style.background = score >= 80 ? 'linear-gradient(135deg,#10B981,#059669)' : score >= 60 ? 'linear-gradient(135deg,#F59E0B,#D97706)' : 'linear-gradient(135deg,#EF4444,#DC2626)';
+            document.getElementById('scoreFill').style.width = score + '%';
+            document.getElementById('scoreFill').style.background = color;
+            document.getElementById('scoreTitle').textContent = errors === 0 ? '✅ Safe to Submit!' : score >= 60 ? '⚠️ Fix issues before submitting' : '❌ Do NOT submit — fix critical errors first!';
+            document.getElementById('errCount').textContent = errors;
+            document.getElementById('warnCount').textContent = warnings;
+            document.getElementById('passCount').textContent = passed;
+
+            var resultsList = data.results || [];
+            if (Array.isArray(resultsList) && resultsList.length) {
+                document.getElementById('resultsList').innerHTML = resultsList.map(function(r) {
+                    var type = r.type || (r.status === 'error' ? 'err' : r.status === 'warning' ? 'warn' : 'ok');
+                    var ico = r.ico || (type === 'err' ? '❌' : type === 'warn' ? '⚠️' : '✅');
+                    var ttl = r.ttl || r.title || 'Check';
+                    var desc = r.desc || r.description || r.message || '';
+                    return '<div class="result-card ' + type + '"><div class="rc-head"><span class="rc-ico">' + ico + '</span><span class="rc-ttl">' + ttl + '</span></div><div class="rc-desc">' + desc + '</div></div>';
+                }).join('');
+            } else {
+                document.getElementById('resultsList').innerHTML = '<div class="result-card ok"><div class="rc-head"><span class="rc-ico">✅</span><span class="rc-ttl">Audit Completed</span></div><div class="rc-desc">Form check completed successfully.</div></div>';
+            }
+
+            document.getElementById('auditForm').style.display = 'none';
+            document.getElementById('auditResults').style.display = 'block';
+            toast(errors === 0 ? '✅ All checks passed!' : '⚠️ ' + errors + ' error(s) found!');
+        }
+
+        function runLocalAudit(name, mobile, aadhar, pan, link){
             var results=[];var errors=0,warnings=0,passed=0;
             // Link check
             if(link){
