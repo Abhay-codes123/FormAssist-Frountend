@@ -81,57 +81,49 @@
     <div class="toast" id="toastEl"></div>
     <script src="global-app.js"></script>
     <script>
-        // Knowledge base
-        var KB = {
-            passport: '🛂 <b>Passport Application:</b><br>1. Visit passportindia.gov.in<br>2. Register & book appointment<br>3. Documents needed:<br>• Aadhar Card<br>• PAN Card<br>• Address proof<br>• 10th Certificate<br>• Passport size photo (white bg)<br><br>💰 Fee: Normal ₹1500 | Tatkal ₹3500<br>⏱️ Time: 30-45 days (Normal)',
-            kisan: '🌾 <b>PM Kisan Samman Nidhi:</b><br>• Benefit: ₹6,000/year (3 installments)<br>• Eligible: Small & marginal farmers<br>• Apply at: pmkisan.gov.in<br><br>Documents needed:<br>• Aadhar Card<br>• Land records (7/12)<br>• Bank passbook<br>• Mobile linked to Aadhar<br><br>📞 Helpline: 155261',
-            cv: '💼 <b>Good CV Structure:</b><br>1. Name & Contact (top)<br>2. Professional Summary (2-3 lines)<br>3. Key Skills<br>4. Education<br>5. Work Experience / Projects<br>6. Certifications<br><br>💡 Tips:<br>• Keep it 1-2 pages<br>• Use action words<br>• Tailor for each job<br><br>Use our CV Builder for instant AI CV! →',
-            bank: '🏦 <b>Bank Account Documents:</b><br><br>Regular Account:<br>• Aadhar Card<br>• PAN Card<br>• Passport size photo<br>• Address proof<br><br>Jan Dhan (Zero Balance):<br>• Only Aadhar Card needed!<br>• No minimum balance<br>• Free debit card + insurance',
-            leave: '📝 <b>Leave Application Tips:</b><br>• Address to: Principal/Manager<br>• Mention exact dates<br>• Give valid reason<br>• Keep it polite & formal<br>• Request approval<br><br>Use our Letter Writer for instant AI-generated letter! →',
-            ayushman: '🏥 <b>Ayushman Bharat (PMJAY):</b><br>• Free health cover: ₹5 Lakh/year<br>• For poor & vulnerable families<br>• 1,500+ medical procedures covered<br>• Valid at all empanelled hospitals<br><br>Check eligibility: pmjay.gov.in<br>📞 Helpline: 14555',
-            aadhar: '🪪 <b>Aadhar Card:</b><br>• Apply/Update: uidai.gov.in<br>• Documents: ID proof + Address proof<br>• Photo + Biometrics at center<br>• Free for new enrollment<br>• Update fee: ₹50<br><br>Download e-Aadhar: myaadhaar.uidai.gov.in<br>📞 Helpline: 1947',
-            mudra: '💰 <b>PM Mudra Loan:</b><br>• For small business owners<br>• 3 Types:<br>  - Shishu: up to ₹50,000<br>  - Kishor: ₹50K to ₹5 Lakh<br>  - Tarun: ₹5L to ₹10 Lakh<br><br>• No collateral needed<br>• Apply at any bank<br>• Website: mudra.org.in',
-            scholarship: '🎓 <b>National Scholarships:</b><br>• Portal: scholarships.gov.in<br>• For SC/ST/OBC/Minority students<br>• Class 1 to PhD level<br>• Amount: ₹500 to ₹20,000/month<br><br>Documents:<br>• Aadhar Card<br>• Income Certificate<br>• Marksheet<br>• Bank passbook<br>• Caste certificate',
-            ration: '🍚 <b>Ration Card:</b><br>• Apply at your local Talathi/Tehsildar office<br>• Or online: nfsa.gov.in<br><br>Documents:<br>• Aadhar Card (all family members)<br>• Address proof<br>• Income certificate<br>• Family photo<br><br>Types: APL / BPL / Antyodaya',
-            default: '🤖 I can help you with:<br><br>• 📄 Form filling guidance<br>• 🏛️ Government schemes info<br>• 📋 Document requirements<br>• 💼 CV building tips<br>• ✍️ Application letter writing<br>• 🪪 Aadhar, PAN, Passport info<br><br>Please ask a specific question!'
-        };
+        var API_BASE = 'https://formassist-backend-bydu.onrender.com';
 
         // Add initial message
         window.addEventListener('load', function(){
             addMsg('ai', '👋 Hello! I\'m your FormAssist AI Assistant.<br><br>I can help you with forms, government schemes, documents, and more!<br><br>What would you like to know?');
         });
 
-        function getReply(msg) {
-            var lower = msg.toLowerCase();
-            if(lower.includes('passport') || lower.includes('travel document')) return KB.passport;
-            if(lower.includes('kisan') || lower.includes('farmer') || lower.includes('pm kisan')) return KB.kisan;
-            if(lower.includes('cv') || lower.includes('resume') || lower.includes('curriculum')) return KB.cv;
-            if(lower.includes('bank') || lower.includes('account') || lower.includes('jan dhan')) return KB.bank;
-            if(lower.includes('leave') || lower.includes('application') || lower.includes('letter')) return KB.leave;
-            if(lower.includes('ayushman') || lower.includes('pmjay') || lower.includes('health insurance')) return KB.ayushman;
-            if(lower.includes('aadhar') || lower.includes('aadhaar') || lower.includes('uid')) return KB.aadhar;
-            if(lower.includes('mudra') || lower.includes('loan') || lower.includes('business loan')) return KB.mudra;
-            if(lower.includes('scholarship') || lower.includes('student') || lower.includes('education')) return KB.scholarship;
-            if(lower.includes('ration') || lower.includes('ration card') || lower.includes('bpl')) return KB.ration;
-            return KB.default;
-        }
-
         function sendQ(q) {
             document.getElementById('chatInput').value = q;
             sendChat();
         }
 
-        function sendChat() {
+        async function sendChat() {
             var inp = document.getElementById('chatInput');
             var msg = inp.value.trim();
             if(!msg) return;
             inp.value = '';
             addMsg('user', msg);
             var typing = addTyping();
-            setTimeout(function(){
+            var lang = localStorage.getItem('fa_lang') || 'en';
+
+            try {
+                var res = await fetch(API_BASE + '/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, language: lang }),
+                    signal: AbortSignal.timeout(20000)
+                });
+                var data = await res.json();
                 typing.remove();
-                addMsg('ai', getReply(msg));
-            }, 800);
+
+                if (res.ok && data && (data.reply || data.response || data.message)) {
+                    var replyText = data.reply || data.response || data.message;
+                    addMsg('ai', replyText.replace(/\n/g, '<br>'));
+                } else {
+                    addMsg('ai', "AI is loading, please wait...");
+                    toast('⚠️ AI is loading, please wait...');
+                }
+            } catch(e) {
+                typing.remove();
+                addMsg('ai', "AI is loading, please wait...");
+                toast('⚠️ AI is loading, please wait...');
+            }
         }
 
         function addMsg(type, content) {
