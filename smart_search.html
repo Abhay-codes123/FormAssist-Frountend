@@ -216,24 +216,91 @@
             startAnalysis(type, url);
         }
 
-        function startAnalysis(type, url) {
+        var API_BASE = 'https://formassist-backend-bydu.onrender.com';
+
+        async function startAnalysis(type, url) {
             document.getElementById('popularSection').style.display = 'none';
             document.getElementById('resultBox').classList.remove('show');
             document.getElementById('resultActions').style.display = 'none';
             document.getElementById('analyzingBox').classList.add('show');
             var steps = ['as1','as2','as3','as4','as5'];
-            var i = 0;
+            var stepIdx = 0;
             var iv = setInterval(function(){
-                if(i<steps.length){
-                    if(i>0){document.getElementById(steps[i-1]).className='a-step done';}
-                    document.getElementById(steps[i]).className='a-step active';
-                    i++;
-                } else {
-                    clearInterval(iv);
-                    document.getElementById(steps[steps.length-1]).className='a-step done';
-                    setTimeout(function(){ showResult(type, url); }, 400);
+                if(stepIdx < steps.length){
+                    if(stepIdx > 0){document.getElementById(steps[stepIdx-1]).className='a-step done';}
+                    document.getElementById(steps[stepIdx]).className='a-step active';
+                    stepIdx++;
                 }
-            }, 600);
+            }, 500);
+
+            var profile = JSON.parse(localStorage.getItem('fa_vault_self') || '{}');
+
+            try {
+                var res = await fetch(API_BASE + '/ai/analyze-form-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url,
+                        user_profile: profile
+                    }),
+                    signal: AbortSignal.timeout(25000)
+                });
+                var data = await res.json();
+                clearInterval(iv);
+                steps.forEach(function(s){ document.getElementById(s).className = 'a-step done'; });
+
+                if (res.ok && data && (data.form_name || data.name || data.fields)) {
+                    renderAnalyzedForm(data, url, profile);
+                } else {
+                    toast('⚠️ AI service busy: ' + (data && (data.detail || data.message) ? data.detail || data.message : 'showing standard analysis'));
+                    showResult(type, url);
+                }
+            } catch(e) {
+                clearInterval(iv);
+                steps.forEach(function(s){ document.getElementById(s).className = 'a-step done'; });
+                toast('⚠️ AI analysis error: showing standard form details');
+                showResult(type, url);
+            }
+        }
+
+        function renderAnalyzedForm(data, url, profile) {
+            var formName = data.form_name || data.name || 'Government Form Detected';
+            document.getElementById('r_name').textContent = formName;
+            document.getElementById('r_url').textContent = url.replace('https://','').replace('http://','');
+            document.getElementById('r_ico').textContent = data.ico || '📋';
+
+            var fieldsHtml = '';
+            var fields = data.fields || data.filled_data || [];
+            if (Array.isArray(fields)) {
+                fieldsHtml = fields.map(function(f) {
+                    var fName = typeof f === 'object' ? (f.name || f.label || f.field) : f;
+                    var fVal = typeof f === 'object' ? (f.val || f.value || f.filled) : '';
+                    var fIco = (typeof f === 'object' && f.ico) ? f.ico : '📝';
+                    return '<div class="field-row"><span class="field-ico">' + fIco + '</span><span class="field-name">' + fName + '</span>' + (fVal ? '<span class="field-val">' + fVal + '</span>' : '<span class="field-empty">Not saved</span>') + '</div>';
+                }).join('');
+            } else if (typeof fields === 'object') {
+                fieldsHtml = Object.keys(fields).map(function(k) {
+                    var fVal = fields[k];
+                    return '<div class="field-row"><span class="field-ico">📝</span><span class="field-name">' + k + '</span>' + (fVal ? '<span class="field-val">' + fVal + '</span>' : '<span class="field-empty">Not saved</span>') + '</div>';
+                }).join('');
+            }
+            document.getElementById('filledFields').innerHTML = fieldsHtml || '<div class="field-row"><span class="field-name">All basic fields detected</span></div>';
+
+            var docs = data.docs_required || data.required_documents || [];
+            var docsHtml = '';
+            if (Array.isArray(docs) && docs.length) {
+                docsHtml = docs.map(function(d) {
+                    return '<div class="doc-item"><div class="doc-dot"></div>' + (typeof d === 'string' ? d : (d.name || d.doc)) + '</div>';
+                }).join('');
+            } else {
+                docsHtml = '<div class="doc-item"><div class="doc-dot"></div>Aadhar Card & Photo ID</div>';
+            }
+            document.getElementById('docList').innerHTML = docsHtml;
+
+            document.getElementById('analyzingBox').classList.remove('show');
+            document.getElementById('resultBox').classList.add('show');
+            document.getElementById('resultActions').style.display = 'block';
+            toast('✅ ' + formName + ' identified!');
         }
 
         function showResult(type, url) {
