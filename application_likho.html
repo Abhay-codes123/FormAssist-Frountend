@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FormAssist - Letter Writer</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root{--white:#FFFFFF;--bg:#F4F7FB;--blue:#87CEEB;--blue2:#ADD8E6;--blue-dark:#1A6FA8;--navy:#1A2340;--navy2:#2C3E6B;--text:#1A2340;--sub:#6B7A99;--border:#E2EAF4;--coral:#EF4444;--mint:#10B981;--amber:#F59E0B;--shadow:0 4px 24px rgba(26,111,168,0.10);--shadow2:0 8px 32px rgba(26,111,168,0.18);}
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -185,7 +186,7 @@
                 <button class="btn-half" onclick="copyLetter()">📋 Copy</button>
                 <button class="btn-half" onclick="shareLetter()">📤 Share</button>
             </div>
-            <button class="btn-primary" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            <button class="btn-primary" onclick="downloadLetterPDF()">⬇️ Download / Save as PDF</button>
             <button class="btn-secondary" onclick="resetLetter()">✍️ Write New Letter</button>
         </div>
     </div>
@@ -193,6 +194,7 @@
     <div class="toast" id="toastEl"></div>
     <script src="global-app.js"></script>
     <script>
+        var API_BASE = 'https://formassist-backend-bydu.onrender.com';
         var selectedType = 'leave';
         var selectedLang = 'en';
 
@@ -216,16 +218,83 @@
             document.getElementById('lang_'+lang).classList.add('active');
         }
 
-        function generateLetter() {
+        async function generateLetter() {
             var name = document.getElementById('l_name').value.trim();
             var to = document.getElementById('l_to').value.trim();
+            var place = document.getElementById('l_place').value.trim() || 'Respected Organization';
+            var extra = document.getElementById('l_extra').value.trim();
+            var fromDate = document.getElementById('l_from') ? document.getElementById('l_from').value : '';
+            var toDate = document.getElementById('l_to_date') ? document.getElementById('l_to_date').value : '';
+
             if(!name||!to){toast('⚠️ Please fill your name and recipient!');return;}
+
+            var details = extra;
+            if(selectedType === 'leave' && (fromDate || toDate)){
+                details = 'Leave from ' + fromDate + ' to ' + toDate + (extra ? '. ' + extra : '');
+            }
+
             document.getElementById('step2').style.display = 'none';
             document.getElementById('genBox').classList.add('show');
-            setTimeout(function(){
+
+            var payload = {
+                type: selectedType,
+                name: name,
+                to: to,
+                place: place,
+                details: details,
+                language: selectedLang
+            };
+
+            try {
+                var res = await fetch(API_BASE + '/ai/generate-letter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: AbortSignal.timeout(25000)
+                });
+                var data = await res.json();
                 document.getElementById('genBox').classList.remove('show');
+
+                if (res.ok && data && (data.letter || data.content)) {
+                    var letterText = data.letter || data.content;
+                    document.getElementById('letterPreview').innerHTML = letterText.replace(/\n/g, '<br>');
+                    document.getElementById('letterPreview').classList.add('show');
+                    document.getElementById('letterActions').style.display = 'block';
+                    toast('✅ AI Letter ready!');
+                } else if (res.ok && data && data.success !== false) {
+                    if (data.letter) {
+                        document.getElementById('letterPreview').innerHTML = data.letter.replace(/\n/g, '<br>');
+                    } else {
+                        buildLetter(name, to);
+                    }
+                    document.getElementById('letterPreview').classList.add('show');
+                    document.getElementById('letterActions').style.display = 'block';
+                    toast('✅ Letter ready!');
+                } else {
+                    toast('⚠️ AI service busy: ' + (data && (data.detail || data.message) ? data.detail || data.message : 'using template'));
+                    buildLetter(name, to);
+                }
+            } catch(e) {
+                document.getElementById('genBox').classList.remove('show');
+                toast('⚠️ AI error: generating standard letter...');
                 buildLetter(name, to);
-            }, 2000);
+            }
+        }
+
+        function downloadLetterPDF() {
+            toast('📄 Generating PDF...');
+            if (typeof html2pdf !== 'undefined') {
+                var opt = {
+                    margin: 10,
+                    filename: 'Letter_FormAssist.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(document.getElementById('letterPreview')).save('Letter_FormAssist.pdf');
+            } else {
+                window.print();
+            }
         }
 
         function buildLetter(name, to) {
