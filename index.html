@@ -26,7 +26,7 @@
         .error-box{background:#FEF2F2;border:1.5px solid #FECACA;border-radius:12px;padding:11px 14px;font-size:13px;color:var(--coral);margin-bottom:14px;display:none;align-items:center;gap:8px;}
         .error-box.show{display:flex;}
         .api-notice{background:#EFF8FF;border:1px solid var(--blue2);border-radius:10px;padding:9px 13px;font-size:11px;color:var(--blue-dark);margin-bottom:14px;text-align:center;}
-        .btn-main{width:100%;padding:15px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.3s;margin-top:4px;}
+        .btn-main{width:100%;padding:15px;background:linear-gradient(135deg,var(--blue-dark),var(--navy2));color:white;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.3s;margin-top:4px;display:flex;align-items:center;justify-content:center;}
         .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,111,168,0.35);}
         .btn-main:disabled{opacity:0.7;cursor:not-allowed;transform:none;}
         .divider{display:flex;align-items:center;gap:12px;margin:18px 0;}
@@ -39,6 +39,7 @@
         .link:hover{text-decoration:underline;}
         .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--navy);border-radius:12px;padding:12px 22px;color:white;font-size:13px;font-weight:500;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;}
         .toast.on{transform:translateX(-50%) translateY(0);}
+        .btn-loader{display:none;width:18px;height:18px;border:2px solid #ffffff;border-top:2px solid transparent;border-radius:50%;animation:spin 0.8s linear infinite;}
         @keyframes spin{to{transform:rotate(360deg)}}
     </style>
 </head>
@@ -96,10 +97,8 @@
     <div class="toast" id="toastEl"></div>
 
     <script>
-        // =============================================
-        // API CONFIG — Replit pe apna URL daalo
-        // =============================================
-        var API_BASE = 'https://formassist-backend-bydu.onrender.com'; // Replit URL: https://your-repl.replit.app
+        // Production Render Backend URL
+        var API_BASE = 'https://formassist-backend-bydu.onrender.com';
 
         // Check backend connection on load
         window.addEventListener('load', function(){
@@ -112,7 +111,7 @@
             try {
                 var res = await fetch(API_BASE + '/health', {
                     method: 'GET',
-                    signal: AbortSignal.timeout(3000)
+                    signal: AbortSignal.timeout(5000)
                 });
                 if(res.ok){
                     status.textContent = '✅ Connected';
@@ -121,10 +120,10 @@
                     notice.style.color = '#10B981';
                     setTimeout(function(){ notice.style.display='none'; }, 2000);
                 } else {
-                    status.textContent = '⚠️ Backend offline — Demo mode';
+                    status.textContent = '⚠️ Backend Offline';
                 }
             } catch(e){
-                status.textContent = '⚠️ Backend offline — Demo mode';
+                status.textContent = '⚠️ Backend Offline';
             }
         }
 
@@ -156,54 +155,40 @@
             eb.classList.remove('show');
             setLoading(true);
 
-            // Check if backend is online first
-            var backendOnline = false;
-            try {
-                var healthRes = await fetch(API_BASE + '/health', { signal: AbortSignal.timeout(3000) });
-                backendOnline = healthRes.ok;
-            } catch(e){ backendOnline = false; }
-
-            if(!backendOnline){
-                // Backend offline - show error, don't auto login
-                document.getElementById('errorTxt').textContent = '⚠️ Server offline! Please start backend first.';
-                eb.classList.add('show');
-                setLoading(false);
-                return;
-            }
-
             try {
                 var res = await fetch(API_BASE + '/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: u, password: p }),
-                    signal: AbortSignal.timeout(5000)
+                    signal: AbortSignal.timeout(10000)
                 });
 
                 var data = await res.json();
 
-                if(res.ok && data.success){
-                    localStorage.setItem('fa_token', data.token);
-                    localStorage.setItem('fa_username', data.username);
-                    localStorage.removeItem('fa_demo_mode');
+                if(res.ok && (data.success !== false) && (data.token || data.access_token)){
+                    var userToken = data.token || data.access_token;
+                    localStorage.setItem('fa_token', userToken);
+                    localStorage.setItem('fa_username', u);
                     t('✅ Login successful!');
                     setTimeout(function(){ window.location.href = 'home.html'; }, 800);
                 } else {
-                    document.getElementById('errorTxt').textContent = data.detail || 'Invalid username or password!';
+                    var errMsg = data.detail || data.message || 'Invalid username or password!';
+                    if(Array.isArray(errMsg)) errMsg = errMsg.map(function(e){ return e.msg || e; }).join(', ');
+                    document.getElementById('errorTxt').textContent = errMsg;
                     eb.classList.add('show');
+                    t('❌ ' + errMsg);
                 }
             } catch(e){
-                document.getElementById('errorTxt').textContent = 'Connection error! Check backend.';
+                document.getElementById('errorTxt').textContent = 'Connection error! Check server connection.';
                 eb.classList.add('show');
+                t('❌ Connection error! Backend offline.');
+            } finally {
+                setLoading(false);
             }
-
-            setLoading(false);
         }
 
         function googleLogin(){
-            t('🔄 Signing in with Google...');
-            localStorage.setItem('fa_token', 'google_demo_token');
-            localStorage.setItem('fa_username', 'Google User');
-            setTimeout(function(){ window.location.href = 'home.html'; }, 1200);
+            t('🔄 Google sign in feature coming soon!');
         }
 
         var tt;
