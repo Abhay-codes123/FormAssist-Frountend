@@ -453,18 +453,47 @@
             }
         }
 
-        function resetPassword(){
+        var API_BASE = 'https://formassist-backend-bydu.onrender.com';
+
+        async function resetPassword(){
             var phrase = document.getElementById('r_phrase').value.trim();
             var newPass = document.getElementById('r_newpass').value;
             var confPass = document.getElementById('r_confpass').value;
             var errBox = document.getElementById('resetErr');
+            var uname = localStorage.getItem('fa_username') || '';
+
             if(!phrase){errBox.textContent='Please enter your secret phrase!';errBox.classList.add('show');return;}
             if(newPass.length<6){errBox.textContent='Password must be at least 6 characters!';errBox.classList.add('show');return;}
             if(newPass!==confPass){errBox.textContent='Passwords do not match!';errBox.classList.add('show');return;}
             errBox.classList.remove('show');
-            localStorage.setItem('fa_pass_updated','true');
-            closeModal('reset');
-            toast('✅ Password reset successfully!');
+
+            try {
+                var res = await fetch(API_BASE + '/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: uname,
+                        secret_phrase: phrase,
+                        new_password: newPass
+                    }),
+                    signal: AbortSignal.timeout(10000)
+                });
+                var data = await res.json();
+                if(res.ok && data.success !== false){
+                    closeModal('reset');
+                    toast('✅ Password reset successfully on server!');
+                } else {
+                    var err = data.detail || data.message || 'Failed to reset password!';
+                    if(Array.isArray(err)) err = err.map(function(e){ return e.msg || e; }).join(', ');
+                    errBox.textContent = err;
+                    errBox.classList.add('show');
+                    toast('❌ ' + err);
+                }
+            } catch(e){
+                errBox.textContent = 'Connection error! Check server connection.';
+                errBox.classList.add('show');
+                toast('❌ Connection error! Backend offline.');
+            }
         }
 
         function deleteAccount(){
