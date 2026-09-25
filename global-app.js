@@ -8,10 +8,34 @@
 // 1. CONFIG
 // ================================================
 var FA = {
-    API_BASE: 'https://formassist-backend-bydu.onrender.com', // Replit URL yahan daalo
+    API_BASE: 'https://formassist-backend-bydu.onrender.com',
     VERSION: '1.0.0',
     DEMO_MODE: false,
 };
+
+// ================================================
+// 1.1 HTML2PDF DOWNLOAD HELPER
+// ================================================
+function downloadPDF(elementId, filename) {
+    filename = filename || 'Document_FormAssist.pdf';
+    var el = typeof elementId === 'string' ? document.getElementById(elementId) : elementId;
+    if (!el) {
+        toast('⚠️ Element not found for PDF download!');
+        return;
+    }
+    if (typeof html2pdf !== 'undefined') {
+        var opt = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(el).save(filename);
+    } else {
+        window.print();
+    }
+}
 
 // ================================================
 // 2. TOAST — ek jagah, sab pages use karein
@@ -82,9 +106,10 @@ async function apiCall(endpoint, method, body, requiresAuth) {
 
         return { ok: res.ok, status: res.status, data: data };
     } catch (e) {
-        FA.DEMO_MODE = true;
-        console.log('API offline — Demo mode:', endpoint);
-        return { ok: false, status: 0, data: { detail: 'Backend offline' }, offline: true };
+        FA.DEMO_MODE = false;
+        console.error('API offline or error:', endpoint, e);
+        toast('❌ Backend offline or connection error!');
+        return { ok: false, status: 0, data: { detail: 'Backend offline or connection error' }, offline: true };
     }
 }
 
