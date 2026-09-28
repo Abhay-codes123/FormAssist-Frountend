@@ -1,0 +1,6 @@
+FormAssist_Backend/
+FA_Backend_Final/
+*.zip
+.vscode/
+.qodo/
+node_modules/

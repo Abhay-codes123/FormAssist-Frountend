@@ -1,0 +1,15 @@
+# Clean URLs for FormAssist
+/home               /home.html               200
+/login              /index.html              200
+/signup             /signup_fixed.html       200
+/chat               /ai_chat.html            200
+/cv                 /cv_banao.html           200
+/letter             /application_likho.html  200
+/doc                /document_samjho.html    200
+/audit              /form_inspector.html     200
+/search             /smart_search.html       200
+/profile            /profile.html            200
+/schemes            /govt_schemes.html       200
+/autofill           /auto_fill.html          200
+/settings           /settings.html           200
+/fill               /form_bharo.html         200
